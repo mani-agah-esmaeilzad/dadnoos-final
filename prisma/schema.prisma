@@ -1,0 +1,281 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String            @id @default(uuid())
+  username         String            @unique
+  passwordHash     String?
+  status           String            @default("active")
+  role             String            @default("user")
+  monthlyTokenQuota Int              @default(100000)
+  monthlyTokenUsed Int               @default(0)
+  createdAt        DateTime          @default(now())
+  sessions         ChatSession[]
+  subscriptions    UserSubscription[]
+  quota            UserQuota?
+  tokenUsage       TokenUsage[]
+  trackingEvents   TrackingEvent[]
+}
+
+model ChatSession {
+  userId     String
+  chatId     String
+  createdAt  DateTime         @default(now())
+  title      String?
+  metadata   Json?
+  supportRequested Boolean    @default(false)
+  reported   Boolean          @default(false)
+
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  attachments ChatAttachment[]
+  summary     ChatSummary?
+
+  @@id([userId, chatId])
+  @@index([userId, createdAt], map: "ix_chatsessions_user_created")
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  userId    String
+  chatId    String
+  role      String
+  content   String
+  tokenCount Int      @default(0)
+  timestamp DateTime  @default(now())
+
+  session ChatSession @relation(fields: [userId, chatId], references: [userId, chatId], onDelete: Cascade)
+
+  @@index([userId, chatId, timestamp], map: "ix_messages_user_chat_ts")
+}
+
+model ChatSummary {
+  id                      String    @id @default(uuid())
+  userId                  String
+  chatId                  String
+  summaryJson             Json
+  summaryText             String    @db.Text
+  summaryVersion          Int       @default(1)
+  summarizedUpToMessageId String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  session ChatSession @relation(fields: [userId, chatId], references: [userId, chatId], onDelete: Cascade)
+
+  @@unique([userId, chatId])
+}
+
+model Document {
+  id         String           @id @default(uuid())
+  title      String?
+  source     String?
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+
+  chunks      DocumentChunk[]
+  attachments ChatAttachment[]
+
+  @@index([createdAt], map: "ix_documents_created_at")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  documentId String
+  chunkIndex Int
+  content    String
+  pageStart  Int?
+  pageEnd    Int?
+  headings   Json?
+  tokens     Int       @default(0)
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, pageStart, pageEnd], map: "ix_docchunks_document_page")
+}
+
+model ChatAttachment {
+  id         String    @id @default(uuid())
+  userId     String
+  chatId     String
+  documentId String?
+  fileName   String?
+  mimeType   String?
+  fileUrl    String?
+  sizeBytes  Int?
+  createdAt  DateTime  @default(now())
+  summary    String?   @db.Text
+
+  session  ChatSession @relation(fields: [userId, chatId], references: [userId, chatId], onDelete: Cascade)
+  document Document?   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, chatId, createdAt], map: "ix_chatattach_user_chat_created")
+}
+
+model SubscriptionPlan {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  title             String
+  durationDays      Int
+  tokenQuota        Int
+  isOrganizational  Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id         String    @id @default(uuid())
+  userId     String
+  planId     String?
+  tokenQuota Int
+  tokensUsed Int       @default(0)
+  startedAt  DateTime  @default(now())
+  expiresAt  DateTime
+  active     Boolean   @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan? @relation(fields: [planId], references: [id])
+
+  @@index([userId], map: "ix_usersubscriptions_user")
+}
+
+enum AdminRole {
+  SUPERADMIN
+  ADMIN
+  ANALYST
+}
+
+model AdminUser {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  role         AdminRole      @default(ADMIN)
+  status       String         @default("active")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  lastLoginAt  DateTime?
+
+  sessions  AdminSession[]
+  auditLogs AdminAuditLog[]
+  blogPosts BlogPost[]
+}
+
+model AdminSession {
+  id         String    @id @default(uuid())
+  adminId    String
+  sessionToken String   @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  lastIp     String?
+  userAgent  String?
+
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId], map: "ix_adminsession_admin")
+}
+
+model AdminAuditLog {
+  id         String    @id @default(uuid())
+  adminId    String
+  actionType String
+  entityType String
+  entityId   String?
+  beforeJson Json?
+  afterJson  Json?
+  metaJson   Json?
+  createdAt  DateTime  @default(now())
+
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([actionType, createdAt], map: "ix_auditlog_action_time")
+}
+
+model BlogPost {
+  id            String     @id @default(uuid())
+  title         String
+  slug          String     @unique
+  excerpt       String?
+  content       String     @db.Text
+  coverImageUrl String?
+  published     Boolean    @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  authorId      String?
+
+  author AdminUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([published, publishedAt], map: "ix_blogpost_published")
+  @@index([createdAt], map: "ix_blogpost_created")
+}
+
+model TokenUsage {
+  id               String    @id @default(uuid())
+  userId           String
+  chatId           String?
+  messageId        String?
+  module           String?
+  model            String?
+  endpoint         String?
+  promptTokens     Int       @default(0)
+  completionTokens Int       @default(0)
+  totalTokens      Int       @default(0)
+  costCents        Int       @default(0)
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "ix_tokenusage_user_time")
+  @@index([chatId, createdAt], map: "ix_tokenusage_chat_time")
+}
+
+model TrackingEvent {
+  id        String    @id @default(uuid())
+  userId    String?
+  eventType String
+  source    String?
+  payload   Json?
+  createdAt DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([eventType, createdAt], map: "ix_tracking_event_type_time")
+  @@index([userId, createdAt], map: "ix_tracking_user_time")
+}
+
+model UserQuota {
+  userId       String   @id
+  monthlyQuota Int
+  monthlyUsed  Int      @default(0)
+  periodStart  DateTime
+  resetAt      DateTime
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum PromptType {
+  SYSTEM
+  CORE
+  ROUTER
+  MODULE
+}
+
+model PromptConfig {
+  id          String     @id @default(uuid())
+  slug        String     @unique
+  type        PromptType
+  name        String
+  description String?
+  content     String     @db.Text
+  model       String?
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}

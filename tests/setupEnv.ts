@@ -1,0 +1,1 @@
+process.env.ALLOW_RUNTIME_ENV_FALLBACK = process.env.ALLOW_RUNTIME_ENV_FALLBACK || '1'

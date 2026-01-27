@@ -1,0 +1,34 @@
+{
+  "name": "Dadnoos",
+  "short_name": "Dadnoos",
+  "start_url": "/c",
+  "display": "standalone",
+  "orientation": "portrait",
+  "description": "Dadnoos Progressive Web App",
+  "icons": [
+    {
+      "src": "/logo-bg-black.png",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon-120x120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon-120x120-precomposed.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon-precomposed.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

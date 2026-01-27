@@ -1,0 +1,53 @@
+name: Deploy Frontend to Dadnoos Server
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.repository == 'JavadFarsani/dadnoos_front'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare staging dir
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          port:     ${{ secrets.DEPLOY_SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ~/deploy/dadnoos_front
+
+      - name: Upload project to staging via scp
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          port:     ${{ secrets.DEPLOY_SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."
+          target: "~/deploy/dadnoos_front"
+          overwrite: true
+
+      - name: Remote build & restart service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          port:     ${{ secrets.DEPLOY_SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            sudo mkdir -p /opt/dadnoos_front
+            sudo rsync -a --delete --exclude=".git" --exclude=".github" ~/deploy/dadnoos_front/ /opt/dadnoos_front/
+            cd /opt/dadnoos_front
+            sudo chown -R aiapps:aiapps .
+            sudo -u aiapps -H npm ci --no-audit --no-fund || sudo -u aiapps -H npm install --no-audit --no-fund
+            sudo -u aiapps -H npm run build
+            sudo -n systemctl restart dadnoos_front

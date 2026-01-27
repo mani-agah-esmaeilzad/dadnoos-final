@@ -1,0 +1,152 @@
+import SupportInboxClient from '@/app/admin/_components/support-inbox'
+import { listSupportConversations } from '@/lib/admin/support'
+import { Button } from '@/app/_ui/components/button'
+import { Input } from '@/app/_ui/components/input'
+
+interface SupportPageProps {
+  searchParams?: Record<string, string | string[] | undefined>
+}
+
+function parseParam(value?: string | string[]) {
+  return typeof value === 'string' ? value : undefined
+}
+
+function buildQueryString(params: Record<string, string | number | undefined>) {
+  const searchParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined) continue
+    searchParams.set(key, String(value))
+  }
+  return searchParams.toString()
+}
+
+export const metadata = {
+  title: 'صندوق پشتیبانی',
+}
+
+export default async function AdminSupportPage({ searchParams }: SupportPageProps) {
+  const pageParam = parseParam(searchParams?.page)
+  const page = Math.max(Number(pageParam ?? '1'), 1)
+  const query = parseParam(searchParams?.query) ?? ''
+  const userId = parseParam(searchParams?.userId) ?? ''
+  const flag = parseParam(searchParams?.flag) ?? 'any'
+  const from = parseParam(searchParams?.from) ?? ''
+  const to = parseParam(searchParams?.to) ?? ''
+
+  const data = await listSupportConversations({
+    page,
+    pageSize: 20,
+    query: query || undefined,
+    userId: userId || undefined,
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
+    flag: flag as 'any' | 'support' | 'reported',
+  })
+
+  const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize))
+
+  return (
+    <section className="space-y-8">
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-neutral-500">صندوق پشتیبانی</p>
+        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">درخواست‌های پشتیبانی و گزارش‌ها</h1>
+      </div>
+
+      <form className="grid gap-4 rounded-3xl border border-neutral-200/60 p-6 shadow-sm dark:border-neutral-800" method="get">
+        <input type="hidden" name="page" value="1" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <label className="text-sm text-neutral-500">جستجو</label>
+            <Input name="query" placeholder="عنوان یا متن گفتگو" defaultValue={query} />
+          </div>
+          <div>
+            <label className="text-sm text-neutral-500">شناسه کاربر</label>
+            <Input name="userId" placeholder="User ID" defaultValue={userId} />
+          </div>
+          <div>
+            <label className="text-sm text-neutral-500">وضعیت</label>
+            <select
+              name="flag"
+              defaultValue={flag}
+              className="mt-1 w-full rounded-3xl border border-neutral-300/60 px-3 py-2 text-sm focus:outline-none"
+            >
+              <option value="any">مورد نیاز (پشتیبانی/گزارش)</option>
+              <option value="support">فقط درخواست پشتیبانی</option>
+              <option value="reported">فقط گزارش شده</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-neutral-500">از تاریخ</label>
+            <Input type="date" name="from" defaultValue={from} />
+          </div>
+          <div>
+            <label className="text-sm text-neutral-500">تا تاریخ</label>
+            <Input type="date" name="to" defaultValue={to} />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button type="submit" className="px-8">
+            اعمال فیلتر
+          </Button>
+        </div>
+      </form>
+
+      <SupportInboxClient
+        userIdFilter={userId || undefined}
+        conversations={data.items.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+          lastMessageAt: item.lastMessageAt.toISOString(),
+        }))}
+      />
+
+      <div className="flex items-center justify-between rounded-3xl border border-neutral-200/60 px-4 py-3 text-sm dark:border-neutral-800">
+        <span>
+          صفحه {page} از {totalPages}
+        </span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={page <= 1}
+            asChild
+            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+          >
+            <a
+              href={`?${buildQueryString({
+                page: page - 1,
+                query: query || undefined,
+                userId: userId || undefined,
+                flag,
+                from: from || undefined,
+                to: to || undefined,
+              })}`}
+            >
+              قبلی
+            </a>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={page >= totalPages}
+            asChild
+            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+          >
+            <a
+              href={`?${buildQueryString({
+                page: page + 1,
+                query: query || undefined,
+                userId: userId || undefined,
+                flag,
+                from: from || undefined,
+                to: to || undefined,
+              })}`}
+            >
+              بعدی
+            </a>
+          </Button>
+        </div>
+      </div>
+    </section>
+  )
+}
