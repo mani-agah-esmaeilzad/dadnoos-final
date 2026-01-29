@@ -104,7 +104,7 @@ export default function ChatInterface({
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [messageToSave, setMessageToSave] = useState<MessageType | null>(null)
   const [defaultSaveTitle, setDefaultSaveTitle] = useState('')
-  const [defaultCategory, setDefaultCategory] = useState('عمومی')
+  const [defaultCaseId, setDefaultCaseId] = useState<string | undefined>(undefined)
 
   const hasQueuedPrompts = queuedPrompts.length > 0
 
@@ -224,7 +224,6 @@ export default function ChatInterface({
 
     const defaultTitle = `پیام ذخیره‌شده ${formattedDate}`
     setDefaultSaveTitle(defaultTitle)
-    setDefaultCategory('عمومی')
     setMessageToSave(message)
     setIsSaveDialogOpen(true)
   }
@@ -384,16 +383,18 @@ export default function ChatInterface({
             <SaveMessageDialog
               isOpen={isSaveDialogOpen}
               defaultTitle={defaultSaveTitle}
-              defaultCategory={defaultCategory}
+              defaultCaseId={defaultCaseId}
               messageText={messageToSave?.text || ''}
-              onSubmit={({ title, category }) => {
+              onSubmit={({ title, caseId, caseName }) => {
                 if (!messageToSave) return
                 addSavedFile({
                   messageId: messageToSave.id,
                   title,
-                  category,
+                  category: caseName || 'عمومی',
                   content: messageToSave.text.trim(),
+                  caseId,
                 })
+                setDefaultCaseId(caseId)
                 setIsSaveDialogOpen(false)
                 setMessageToSave(null)
                 onOpenFileManager()

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, FileText, Trash2 } from 'lucide-react'
+import { Download, FileText, FolderPlus, FolderOpen, MinusCircle, Trash2 } from 'lucide-react'
 import Popup from '@/app/_ui/components/popup'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
@@ -23,33 +23,56 @@ interface SavedMessagesManagerProps {
 
 export function SavedMessagesManager({ isOpen, onClose }: SavedMessagesManagerProps) {
   const files = useSavedMessagesStore((state) => state.files)
+  const cases = useSavedMessagesStore((state) => state.cases)
   const removeFile = useSavedMessagesStore((state) => state.removeFile)
   const renameFile = useSavedMessagesStore((state) => state.renameFile)
-  const updateCategory = useSavedMessagesStore((state) => state.updateCategory)
+  const updateCaseAssignment = useSavedMessagesStore((state) => state.updateCaseAssignment)
+  const addCase = useSavedMessagesStore((state) => state.addCase)
+  const renameCase = useSavedMessagesStore((state) => state.renameCase)
+  const removeCase = useSavedMessagesStore((state) => state.removeCase)
+  const ensureCasesInitialized = useSavedMessagesStore((state) => state.ensureCasesInitialized)
 
   const [titleDrafts, setTitleDrafts] = useState<Record<string, string>>({})
-  const [categoryDrafts, setCategoryDrafts] = useState<Record<string, string>>({})
-  const [selectedCategory, setSelectedCategory] = useState<string>('همه')
+  const [caseDrafts, setCaseDrafts] = useState<Record<string, string>>({})
+  const [selectedCaseFilter, setSelectedCaseFilter] = useState<'all' | 'uncategorized' | string>('all')
+  const [newCaseName, setNewCaseName] = useState('')
 
   useEffect(() => {
     if (!isOpen) return
-
+    ensureCasesInitialized()
     const drafts: Record<string, string> = {}
     files.forEach((file) => {
       drafts[file.id] = file.title
     })
     setTitleDrafts(drafts)
-
-    const categoryDraftMap: Record<string, string> = {}
-    files.forEach((file) => {
-      categoryDraftMap[file.id] = file.category || 'عمومی'
+    const caseDraftMap: Record<string, string> = {}
+    cases.forEach((caseItem) => {
+      caseDraftMap[caseItem.id] = caseItem.name
     })
-    setCategoryDrafts(categoryDraftMap)
-  }, [files, isOpen])
+    setCaseDrafts(caseDraftMap)
+  }, [files, cases, isOpen, ensureCasesInitialized])
 
-  const handleRename = (id: string) => {
+  const handleRenameFile = (id: string) => {
     const next = titleDrafts[id]
     renameFile(id, next || '')
+  }
+
+  const handleRenameCase = (id: string) => {
+    const next = caseDrafts[id]
+    renameCase(id, next || '')
+  }
+
+  const handleCreateCase = () => {
+    const trimmed = newCaseName.trim()
+    if (!trimmed) return
+    const created = addCase(trimmed)
+    setSelectedCaseFilter(created.id)
+    setNewCaseName('')
+  }
+
+  const handleDeleteCase = (id: string) => {
+    removeCase(id)
+    setSelectedCaseFilter((prev) => (prev === id ? 'all' : prev))
   }
 
   const formatDate = (timestamp: number) => {
@@ -61,32 +84,41 @@ export function SavedMessagesManager({ isOpen, onClose }: SavedMessagesManagerPr
     })
   }
 
+  const caseMap = useMemo(() => new Map(cases.map((item) => [item.id, item])), [cases])
+
+  const sortedCases = useMemo(
+    () => [...cases].sort((a, b) => b.createdAt - a.createdAt),
+    [cases],
+  )
+
+  const caseCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    files.forEach((file) => {
+      const key = file.caseId || 'uncategorized'
+      counts.set(key, (counts.get(key) || 0) + 1)
+    })
+    return counts
+  }, [files])
+
   const downloadAsWord = async (fileId: string) => {
     const file = files.find((f) => f.id === fileId)
     if (!file) return
 
-    const doc = await createBrandedDocument(file)
+    const caseName = file.caseId ? caseMap.get(file.caseId)?.name : undefined
+    const doc = await createBrandedDocument(file, caseName)
     const blob = await Packer.toBlob(doc)
     saveAs(blob, `${file.title || 'پیام ذخیره‌شده'}.docx`)
   }
 
-  const categories = useMemo(() => {
-    const unique = Array.from(
-      new Set(files.map((file) => file.category || 'عمومی'))
-    )
-    unique.sort((a, b) => a.localeCompare(b, 'fa'))
-    return ['همه', ...unique]
-  }, [files])
-
   const filteredFiles = useMemo(() => {
-    if (selectedCategory === 'همه') return files
-    return files.filter((file) => (file.category || 'عمومی') === selectedCategory)
-  }, [files, selectedCategory])
+    if (selectedCaseFilter === 'all') return files
+    if (selectedCaseFilter === 'uncategorized') {
+      return files.filter((file) => !file.caseId)
+    }
+    return files.filter((file) => file.caseId === selectedCaseFilter)
+  }, [files, selectedCaseFilter])
 
-  const emptyState = useMemo(
-    () => files.length === 0,
-    [files.length],
-  )
+  const emptyState = files.length === 0
 
   return (
     <Popup visible={isOpen} onClose={onClose}>
@@ -103,108 +135,217 @@ export function SavedMessagesManager({ isOpen, onClose }: SavedMessagesManagerPr
           </Button>
         </div>
 
-        {emptyState ? (
-          <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-600 px-6 py-10 text-center text-sm text-neutral-500">
-            هنوز پیامی ذخیره نشده است. روی آیکون ذخیره پیام هوش مصنوعی بزنید تا در اینجا ببینید.
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={category === selectedCategory ? 'secondary' : 'ghost'}
-                  className="px-3 py-1 rounded-2xl text-xs"
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category === 'همه' ? 'همه پرونده‌ها' : category}
-                </Button>
-              ))}
+        <div className="rounded-3xl border border-neutral-200/60 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 p-4 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-neutral-500">افزودن و مدیریت پرونده</p>
+              <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                {cases.length > 0 ? `${cases.length} پرونده فعال` : 'پرونده‌ای ثبت نشده'}
+              </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-              {filteredFiles.map((file) => (
+            <FolderPlus className="text-[#9b956d]" size={24} />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={newCaseName}
+              onChange={(event) => setNewCaseName(event.target.value)}
+              placeholder="نام پرونده جدید"
+              className="text-sm"
+            />
+            <Button
+              type="button"
+              className="whitespace-nowrap"
+              disabled={!newCaseName.trim()}
+              onClick={handleCreateCase}
+            >
+              افزودن پرونده
+            </Button>
+          </div>
+          {sortedCases.length > 0 && (
+            <div className="grid gap-2 max-h-48 overflow-y-auto pr-1">
+              {sortedCases.map((caseItem) => (
                 <div
-                  key={file.id}
-                  className="rounded-3xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/70 dark:bg-neutral-900/50 p-4 flex flex-col gap-3"
+                  key={caseItem.id}
+                  className="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/50 p-3 space-y-2"
                 >
-                  <div className="flex items-center gap-3">
-                  <div className="bg-white dark:bg-neutral-800 rounded-2xl p-3 shadow-sm">
-                    <FileText className="size-5 text-[#9b956d]" />
-                  </div>
-                  <div className="flex-1">
+                  <div className="flex items-center gap-2">
                     <Input
-                      value={titleDrafts[file.id] ?? file.title}
+                      value={caseDrafts[caseItem.id] ?? caseItem.name}
                       onChange={(event) =>
-                        setTitleDrafts((prev) => ({
+                        setCaseDrafts((prev) => ({
                           ...prev,
-                          [file.id]: event.target.value,
+                          [caseItem.id]: event.target.value,
                         }))
                       }
-                      onBlur={() => handleRename(file.id)}
+                      onBlur={() => handleRenameCase(caseItem.id)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
                           event.currentTarget.blur()
                         }
                       }}
-                      className="text-sm font-semibold bg-transparent focus-visible:ring-neutral-400"
+                      className="text-sm font-medium bg-transparent"
                     />
-                    <p className="text-[11px] text-neutral-500 mt-1">
-                      {formatDate(file.savedAt)}
-                    </p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-neutral-500 hover:text-red-500"
+                      onClick={() => handleDeleteCase(caseItem.id)}
+                    >
+                      <MinusCircle className="size-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-neutral-500">
+                    <span>
+                      ساخته شده: {new Date(caseItem.createdAt).toLocaleDateString('fa-IR')}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[11px] h-7 px-2 text-neutral-500"
+                      onClick={() => setSelectedCaseFilter(caseItem.id)}
+                    >
+                      مشاهده ({caseCounts.get(caseItem.id) || 0})
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={categoryDrafts[file.id] ?? file.category}
-                    onChange={(event) =>
-                      setCategoryDrafts((prev) => ({
-                        ...prev,
-                        [file.id]: event.target.value,
-                      }))
-                    }
-                    onBlur={() => updateCategory(file.id, categoryDrafts[file.id] ?? file.category)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.currentTarget.blur()
-                      }
-                    }}
-                    className="text-xs font-medium bg-transparent focus-visible:ring-neutral-400"
-                    placeholder="دسته‌بندی"
-                  />
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-neutral-200/60 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-200">
-                    {(file.category || 'عمومی')}
-                  </span>
-                </div>
-
-                <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line max-h-32 overflow-hidden">
-                  {file.content}
-                </p>
-
-                <div className="flex items-center justify-between pt-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2 px-3 text-xs"
-                    onClick={() => downloadAsWord(file.id)}
-                  >
-                    <Download className="size-4" />
-                    دانلود Word
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-neutral-500 hover:text-red-500"
-                    onClick={() => removeFile(file.id)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
               ))}
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        <div className="rounded-3xl border border-neutral-200/60 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/40 p-4">
+          {emptyState ? (
+            <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-600 px-6 py-10 text-center text-sm text-neutral-500">
+              هنوز پیامی ذخیره نشده است. روی آیکون ذخیره پیام هوش مصنوعی بزنید تا در اینجا ببینید.
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Button
+                  variant={selectedCaseFilter === 'all' ? 'secondary' : 'ghost'}
+                  className="px-3 py-1 rounded-2xl text-xs"
+                  onClick={() => setSelectedCaseFilter('all')}
+                >
+                  همه پرونده‌ها ({files.length})
+                </Button>
+                <Button
+                  variant={selectedCaseFilter === 'uncategorized' ? 'secondary' : 'ghost'}
+                  className="px-3 py-1 rounded-2xl text-xs"
+                  onClick={() => setSelectedCaseFilter('uncategorized')}
+                >
+                  بدون پرونده ({caseCounts.get('uncategorized') || 0})
+                </Button>
+                {sortedCases.map((caseItem) => (
+                  <Button
+                    key={caseItem.id}
+                    variant={selectedCaseFilter === caseItem.id ? 'secondary' : 'ghost'}
+                    className="px-3 py-1 rounded-2xl text-xs"
+                    onClick={() => setSelectedCaseFilter(caseItem.id)}
+                  >
+                    {caseItem.name} ({caseCounts.get(caseItem.id) || 0})
+                  </Button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1">
+                {filteredFiles.map((file) => {
+                  const assignedCaseName = file.caseId ? caseMap.get(file.caseId)?.name : undefined
+                  return (
+                    <div
+                      key={file.id}
+                      className="rounded-3xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/70 dark:bg-neutral-900/50 p-4 flex flex-col gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-3 shadow-sm">
+                          <FileText className="size-5 text-[#9b956d]" />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            value={titleDrafts[file.id] ?? file.title}
+                            onChange={(event) =>
+                              setTitleDrafts((prev) => ({
+                                ...prev,
+                                [file.id]: event.target.value,
+                              }))
+                            }
+                            onBlur={() => handleRenameFile(file.id)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter') {
+                                event.currentTarget.blur()
+                              }
+                            }}
+                            className="text-sm font-semibold bg-transparent focus-visible:ring-neutral-400"
+                          />
+                          <p className="text-[11px] text-neutral-500 mt-1">
+                            {formatDate(file.savedAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <p className="text-[11px] text-neutral-500 mb-1">پرونده</p>
+                          <select
+                            value={file.caseId ?? ''}
+                            onChange={(event) =>
+                              updateCaseAssignment(
+                                file.id,
+                                event.target.value ? event.target.value : undefined,
+                              )
+                            }
+                            className="w-full rounded-2xl border border-neutral-200/70 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/50 px-3 py-1.5 text-xs focus:outline-none"
+                          >
+                            <option value="">بدون پرونده</option>
+                            {sortedCases.map((caseItem) => (
+                              <option key={caseItem.id} value={caseItem.id}>
+                                {caseItem.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="text-[11px] px-2 py-1 rounded-full bg-neutral-200/60 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-200">
+                          {file.category || 'عمومی'}
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line max-h-32 overflow-hidden">
+                        {file.content}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex flex-col text-[11px] text-neutral-500">
+                          <span>
+                            <FolderOpen className="inline-block size-3 ml-1 align-middle" />
+                            پرونده فعلی: {assignedCaseName || 'بدون پرونده'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-2 px-3 text-xs"
+                            onClick={() => downloadAsWord(file.id)}
+                          >
+                            <Download className="size-4" />
+                            دانلود
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-neutral-500 hover:text-red-500"
+                            onClick={() => removeFile(file.id)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </Popup>
   )
@@ -222,7 +363,7 @@ async function loadLogoImage(): Promise<Uint8Array | null> {
   }
 }
 
-async function createBrandedDocument(file: SavedMessageFile) {
+async function createBrandedDocument(file: SavedMessageFile, caseName?: string) {
   const paragraphs = textToParagraphs(file.content)
   const logoImage = await loadLogoImage()
 
@@ -272,7 +413,7 @@ async function createBrandedDocument(file: SavedMessageFile) {
       spacing: { after: 80 },
       children: [
         new TextRun({
-          text: `دسته‌بندی: ${file.category || 'عمومی'}`,
+          text: `پرونده: ${caseName || 'بدون پرونده'}`,
           size: 24,
           color: '4B4B4B',
           rightToLeft: true,
@@ -286,6 +427,19 @@ async function createBrandedDocument(file: SavedMessageFile) {
       children: [
         new TextRun({
           text: `تاریخ ذخیره‌سازی: ${formatFaDate(file.savedAt)}`,
+          size: 22,
+          color: '6B6B6B',
+          rightToLeft: true,
+        }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      bidirectional: true,
+      spacing: { after: 320 },
+      children: [
+        new TextRun({
+          text: `برچسب: ${file.category || 'عمومی'}`,
           size: 22,
           color: '6B6B6B',
           rightToLeft: true,
