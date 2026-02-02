@@ -31,7 +31,7 @@ export default function Popup({ visible, onClose, children }: PopupProps) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed inset-0 w-screen z-50 flex items-end md:items-center justify-center overflow-hidden -mb-10"
+          className="fixed inset-0 w-screen z-50 flex items-end md:items-center justify-center overflow-hidden -mb-10 md:-mb-0"
           onClick={handleBackdropClick}
         >
           <motion.div
@@ -73,7 +73,7 @@ export default function Popup({ visible, onClose, children }: PopupProps) {
               transition: { duration: 0.35, ease: 'easeInOut' }
             }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="relative z-20 w-full max-w-lg bg-white dark:bg-neutral-800 rounded-t-4xl shadow-xl py-6 px-3 pb-20 cursor-grab"
+            className="relative z-20 w-full max-w-xl bg-white dark:bg-neutral-800 rounded-t-4xl md:rounded-4xl shadow-xl pt-6 px-3 pb-20 md:pb-6"
           >
             <div className="absolute top-1.5 right-1/2 translate-x-1/2 h-1.5 w-[10%] rounded-full bg-neutral-400/25" />
             {children}
