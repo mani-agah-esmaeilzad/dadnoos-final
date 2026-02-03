@@ -4,13 +4,11 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 import { useRouter } from "next/navigation"
 
-import React, { useState } from "react"
+import React from "react"
 
 import BackButton from "@/app/_ui/back-button"
 
 import * as texts from '@/app/_text/common.js'
-
-import { apiService } from '@/app/_lib/services/api'
 
 import { motion } from "framer-motion"
 import { cn, toPersianNumber } from "@/app/_lib/utils"
@@ -75,7 +73,6 @@ export default function PlanPage({ params }: { params: Promise<{ plan: string }>
   const plan = planDetails[planKey]
 
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
 
   if (!plan) return notFound()
 
@@ -84,42 +81,8 @@ export default function PlanPage({ params }: { params: Promise<{ plan: string }>
     .map((line: string) => line.trim())
     .filter((line: string) => line.length > 0)
 
-  const handleFreeActivate = async () => {
-    setLoading(true)
-    try {
-      const data = await apiService.getPlans()
-
-      const plansArray = Array.isArray(data)
-        ? data
-        : Array.isArray((data as any)?.plans)
-          ? (data as any).plans
-          : []
-
-      const freePlan = plansArray.find((p: any) => {
-        const title = (p?.title || '').toString().trim().toLowerCase()
-        const code = (p?.code || '').toString().trim().toLowerCase()
-        return (
-          code === 'free' ||
-          title === 'one-month' ||
-          title === 'یک ماهه' ||
-          title === 'پلن رایگان'
-        )
-      })
-
-      if (!freePlan) {
-        alert("پلن یک ماهه رایگان موجود نیست!")
-        return
-      }
-
-      await apiService.subscribePlan(freePlan.id)
-      alert("پلن یک ماهه شما فعال شد.")
-      router.push("/c")
-    } catch (err: any) {
-      console.error(err)
-      alert("خطا در فعال‌سازی پلن")
-    } finally {
-      setLoading(false)
-    }
+  const handleCheckout = () => {
+    router.push(`/payment/${planKey}`)
   }
 
   return (
@@ -217,18 +180,10 @@ export default function PlanPage({ params }: { params: Promise<{ plan: string }>
       </div>
 
       <div className="fixed bottom-0 w-full max-w-2xl mx-auto px-4 mb-safe md:mb-10">
-        {planKey === "monthly" ? (
-          <button
-            disabled={loading}
-            onClick={handleFreeActivate}
-            className="w-full bg-[#9b956d] text-white font-bold py-3 rounded-full shadow-md hover:bg-[#9b956d]/75 active:bg-[#9b956d]/75 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {loading ? "در حال فعال‌سازی..." : "فعال‌سازی یک‌ماهه رایگان"}
-          </button>
-        ) : plan.price ? (
+        {plan.price ? (
           <button
             className="w-full bg-[#9b956d] text-white font-bold py-3 rounded-full shadow-md hover:bg-[#9b956d]/75 active:bg-[#9b956d]/75 transition-colors cursor-pointer"
-            onClick={() => router.push(`/payment/${planKey}`)}
+            onClick={handleCheckout}
           >
             پرداخت {new Intl.NumberFormat("fa-IR").format(plan.price)} تومان
           </button>

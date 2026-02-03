@@ -376,6 +376,10 @@ export default function ChatInterface({
               onStartChatWithPrompt={onStartChatWithPrompt}
             />
 
+            <SavedMessagesManager
+              isOpen={isFileManagerOpen}
+              onClose={onCloseFileManager}
+            />
             <SaveMessageDialog
               isOpen={isSaveDialogOpen}
               defaultTitle={defaultSaveTitle}
@@ -437,11 +441,6 @@ export default function ChatInterface({
           }
         </AnimatePresence>
       </div>
-
-      <SavedMessagesManager
-        isOpen={isFileManagerOpen}
-        onClose={onCloseFileManager}
-      />
     </>
   )
 }

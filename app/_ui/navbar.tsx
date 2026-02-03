@@ -7,7 +7,7 @@ import { websiteName } from '@/app/_text/common'
 
 export default function Navbar() {
   return (
-    <div className="flex items-center justify-between h-14 w-full sticky top-0 px-3 sm:px-14 sm:pt-12 pt-safe-20 z-50">
+    <div className="flex items-center justify-between h-14 w-full sticky top-0 px-3 sm:px-14 sm:pt-12 bg-background pt-safe-20 z-40">
       <Link href="/" className="w-9 aspect-square">
         <Image
           className="size-9 scale-[135%] hover:scale-125 active:scale-110 transition-transform"

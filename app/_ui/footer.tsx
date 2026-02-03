@@ -10,7 +10,7 @@ const namad = [
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-800/75 text-neutral-50 pt-16 md:pt-12 pb-6 mt-10 min-h-screen md:min-h-0">
+    <footer className="bg-neutral-800/75 text-neutral-50 pt-16 md:pt-12 pb-6 mt-10 min-h-screen">
       <div id="about-footer" className="md:px-32 mx-auto px-6 grid grid-cols-1 sm:grid-cols-5 xl:grid-cols-8 gap-y-6 gap-x-32">
 
         <CompanyInfo showDescription={true} />

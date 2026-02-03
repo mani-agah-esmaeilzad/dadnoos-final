@@ -150,7 +150,7 @@ export function UploadPanel({
               </div>
 
 
-              {/* <div
+              <div
                 className={cn(
                   expanded ? "opacity-0" : "opacity-100",
                   "w-full h-3/4 mt-1.5 overflow-y-auto transition-all duration-400 rounded-3xl overscroll-none"
@@ -171,7 +171,7 @@ export function UploadPanel({
                     </div>
                   ))}
                 </div>
-              </div> */}
+              </div>
 
               {/* hidden inputs */}
               <input

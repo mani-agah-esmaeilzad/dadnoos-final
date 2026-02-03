@@ -1,6 +1,6 @@
 import React from "react"
 import { Button } from "@/app/_ui/components/button"
-import { Check, Copy, Pencil, Save, ThumbsDown, ThumbsUp } from "lucide-react"
+import { AudioLines, Check, Copy, Loader2, Pencil, Save, Square, ThumbsDown, ThumbsUp } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "@/app/_lib/utils"
 
@@ -12,6 +12,7 @@ interface MessageActionsProps {
   onCopy: () => void
   onEdit?: () => void
   onSave?: () => void
+  onPlayAudio?: () => void
   onThumbsUp?: () => void
   onThumbsDown?: () => void
   disabledSave?: boolean
@@ -19,6 +20,9 @@ interface MessageActionsProps {
   disabledPencil?: boolean
   disabledThumbsUp?: boolean
   disabledThumbsDown?: boolean
+  audioLoading?: boolean
+  audioPlaying?: boolean
+  audioDisabled?: boolean
 }
 
 export function MessageActions({
@@ -29,6 +33,7 @@ export function MessageActions({
   onCopy,
   onEdit,
   onSave,
+  onPlayAudio,
   onThumbsUp,
   onThumbsDown,
   disabledSave = true,
@@ -36,6 +41,9 @@ export function MessageActions({
   disabledPencil = true,
   disabledThumbsUp = true,
   disabledThumbsDown = true,
+  audioLoading = false,
+  audioPlaying = false,
+  audioDisabled = false,
 }: MessageActionsProps) {
   if (!typingDone) return null
 
@@ -58,16 +66,32 @@ export function MessageActions({
       className={cn(
         isUser && isLast && "",
         isUser ? "m-2 mb-0" : "-mt-1 px-2",
-        "flex gap-1.5 text-neutral-700/75 dark:text-neutral-100/75"
+        "flex gap-2.5 md:gap-1 text-neutral-700/75 dark:text-neutral-100/75"
       )}
     >
+      {onPlayAudio && (
+        <Button
+          variant="ghost"
+          className="h-7 md:h-9 aspect-square p-0 rounded-xl flex items-center justify-center disabled:opacity-15"
+          onClick={onPlayAudio}
+          disabled={audioDisabled || audioLoading}
+        >
+          {audioLoading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : audioPlaying ? (
+            <Square className="size-4" />
+          ) : (
+            <AudioLines className="size-5" />
+          )}
+        </Button>
+      )}
       {baseButtons.map(
         (btn, i) =>
           btn.onClick && (
             <Button
               key={i}
               variant="ghost"
-              className="h-9 md:h-11 aspect-square p-1 rounded-xl flex items-center justify-center disabled:opacity-15"
+              className="h-7 md:h-9 aspect-square p-0 rounded-xl flex items-center justify-center disabled:opacity-15"
               onClick={btn.onClick}
               disabled={btn.disabled}
             >

@@ -13,11 +13,7 @@ export default function CompanyInfo({ showDescription = true }: CompanyInfoProps
   return (
     <>
       <div className="sm:col-span-2 xl:col-span-3">
-        {!showDescription ? (
-          <Image width={500} height={500} src="/logo.png" alt="Dadnoos" className="w-24 mb-2" />
-        ) : (
-          <div className='size-24 mb-2' />
-        )}
+        <Image width={500} height={500} src="/logo.png" alt="Dadnoos" className="w-24 mb-2" />
         <div className="flex gap-6 mb-10">
           <a className={classColor} href="#"><Twitter /></a>
           <a className={classColor} href="#"><Linkedin /></a>

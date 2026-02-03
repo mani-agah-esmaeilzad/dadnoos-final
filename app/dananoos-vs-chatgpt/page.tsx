@@ -29,7 +29,7 @@ const differences = [
 
 export default function DananousVsChatGPT() {
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-16 pb-32">
+    <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="fixed top-3 left-1 md:top-20 md:left-20 pt-safe">
         <BackButton />
       </div>

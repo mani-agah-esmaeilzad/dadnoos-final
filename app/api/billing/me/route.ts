@@ -26,7 +26,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ has_subscription: false, subscription: null })
     }
 
-    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: subscription.planId || '' } })
+    const plan = subscription.planId
+      ? await prisma.subscriptionPlan.findUnique({ where: { id: subscription.planId } })
+      : null
     const payload = {
       id: subscription.id,
       plan_id: subscription.planId,
@@ -38,6 +40,8 @@ export async function GET(req: NextRequest) {
       started_at: subscription.startedAt.toISOString(),
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,
+      plan_price_cents: plan?.priceCents ?? 0,
+      upgrade_from_subscription_id: (subscription as { upgradedFromId?: string | null })?.upgradedFromId ?? null,
     }
 
     return NextResponse.json({ has_subscription: true, subscription: payload })

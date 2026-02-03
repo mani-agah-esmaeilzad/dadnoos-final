@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { getMarkdownRenderers } from "@/app/_ui/chat/markdownRenderers"
 import { cn } from '@/app/_lib/utils'
@@ -16,6 +16,7 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import Link from 'next/link'
 import Image from 'next/image'
+import { apiService } from '@/app/_lib/services/api'
 
 // import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 // import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -69,11 +70,28 @@ export function Message({
 
   const [displayedText, setDisplayedText] = useState('')
   const [typingDone, setTypingDone] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [isAudioLoading, setIsAudioLoading] = useState(false)
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false)
 
   const frameRef = useRef<number | null>(null)
   const typedRef = useRef(false)
   const indexRef = useRef(0)
   const opacityRef = useRef(0)
+
+  const cleanupAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      audioRef.current.src = ''
+    }
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl)
+      setAudioUrl(null)
+    }
+    setIsAudioPlaying(false)
+  }, [audioUrl])
 
   const convertNumbersToPersian = (text: string) => {
     const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
@@ -149,6 +167,27 @@ export function Message({
     }
   }, [message.text, message.isHistory])
 
+  useEffect(() => {
+    return () => {
+      cleanupAudio()
+    }
+  }, [cleanupAudio])
+
+  useEffect(() => {
+    cleanupAudio()
+  }, [message.id, cleanupAudio])
+
+  useEffect(() => {
+    if (!audioUrl || !audioRef.current) return
+    audioRef.current.src = audioUrl
+    const playPromise = audioRef.current.play()
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {
+        setIsAudioPlaying(false)
+      })
+    }
+  }, [audioUrl])
+
   const copyToClipboard = async () => {
     try {
       const textToCopy = convertNumbersToPersian(message.text)
@@ -157,6 +196,31 @@ export function Message({
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy text: ', err)
+    }
+  }
+
+  const handleAudioToggle = async () => {
+    if (!message.text?.trim()) return
+    if (isAudioLoading) return
+    if (audioUrl && audioRef.current) {
+      if (isAudioPlaying) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.currentTime = 0
+        audioRef.current.play().catch(() => setIsAudioPlaying(false))
+      }
+      return
+    }
+    try {
+      setIsAudioLoading(true)
+      const blob = await apiService.textToSpeech(message.text)
+      const url = URL.createObjectURL(blob)
+      setAudioUrl(url)
+    } catch (error) {
+      console.error('Failed to synthesize speech:', error)
+      alert('پخش صوت با خطا مواجه شد.')
+    } finally {
+      setIsAudioLoading(false)
     }
   }
 
@@ -184,6 +248,23 @@ export function Message({
 
   return (
     <>
+      <audio
+        ref={audioRef}
+        src={audioUrl ?? undefined}
+        className="hidden"
+        onPlay={() => setIsAudioPlaying(true)}
+        onPause={() => setIsAudioPlaying(false)}
+        onEnded={() => {
+          setIsAudioPlaying(false)
+        }}
+        onError={() => {
+          setIsAudioPlaying(false)
+          if (audioUrl) {
+            URL.revokeObjectURL(audioUrl)
+            setAudioUrl(null)
+          }
+        }}
+      />
       <AnimatePresence initial={false}>
         {message.files && message.files.length > 0 && (
           <motion.div
@@ -283,9 +364,13 @@ export function Message({
                 onSaveMessage?.(message)
               }
             }}
+            onPlayAudio={!message.isUser ? handleAudioToggle : undefined}
             onThumbsUp={() => console.log("Thumbs up")}
             onThumbsDown={() => console.log("Thumbs down")}
             disabledSave={message.isUser}
+            audioLoading={isAudioLoading}
+            audioPlaying={isAudioPlaying}
+            audioDisabled={!message.text?.trim()}
           />
         )}
 

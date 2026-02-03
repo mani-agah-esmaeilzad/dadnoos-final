@@ -12,6 +12,7 @@ export async function getActiveSubscription(userId: string) {
       expiresAt: { gte: now },
     },
     orderBy: { startedAt: 'desc' },
+    include: { plan: true },
   })
 }
 

@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { env } from '@/lib/env'
+import { BUILT_IN_PLANS, ensurePlanCatalog } from '@/lib/billing/defaultPlan'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const isVercelBuild = process.env.VERCEL === '1' && process.env.NEXT_PHASE === 'phase-production-build'
 
-const FALLBACK_PLAN = {
-  id: `fallback-${env.DEFAULT_PLAN_CODE}`,
-  code: env.DEFAULT_PLAN_CODE,
-  title: env.DEFAULT_PLAN_TITLE,
-  duration_days: env.DEFAULT_PLAN_DURATION_DAYS,
-  token_quota: env.DEFAULT_PLAN_TOKEN_QUOTA,
-  is_organizational: false,
-}
-
 function buildFallbackPlans(includeOrg: boolean) {
-  if (includeOrg) {
-    return [FALLBACK_PLAN]
-  }
-  return [FALLBACK_PLAN].filter((plan) => !plan.is_organizational)
+  const plans = BUILT_IN_PLANS.map((plan) => ({
+    id: `fallback-${plan.code}`,
+    code: plan.code,
+    title: plan.title,
+    duration_days: plan.durationDays,
+    token_quota: plan.tokenQuota,
+    is_organizational: plan.isOrganizational ?? false,
+    price_cents: plan.priceCents,
+  }))
+  return includeOrg ? plans : plans.filter((plan) => !plan.is_organizational)
 }
 
 export async function GET(req: NextRequest) {
@@ -31,9 +29,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { ensureDefaultPlan } = await import('@/lib/billing/defaultPlan')
     const { prisma } = await import('@/lib/db/prisma')
-    await ensureDefaultPlan()
+    await ensurePlanCatalog()
     const plans = await prisma.subscriptionPlan.findMany({
       where: includeOrg ? {} : { isOrganizational: false },
       orderBy: { createdAt: 'asc' },
@@ -46,6 +43,7 @@ export async function GET(req: NextRequest) {
       duration_days: plan.durationDays,
       token_quota: plan.tokenQuota,
       is_organizational: plan.isOrganizational,
+      price_cents: plan.priceCents,
     }))
     return NextResponse.json({ plans: payload })
   } catch (error) {

@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'داشبورد', href: '/admin' },
   { label: 'کاربران', href: '/admin/users' },
   { label: 'مصرف توکن', href: '/admin/usage' },
+  { label: 'تخفیف‌ها', href: '/admin/discounts' },
   { label: 'وبلاگ', href: '/admin/blogs' },
   { label: 'پرامپت‌ها', href: '/admin/prompts' },
   { label: 'پشتیبانی', href: '/admin/support' },

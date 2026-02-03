@@ -20,7 +20,7 @@ const markdownComponents: Components = {
   h2: (props) => <h2 className="mt-8 text-2xl font-bold text-neutral-900 dark:text-neutral-100" {...props} />,
   h3: (props) => <h3 className="mt-6 text-xl font-semibold text-neutral-900 dark:text-neutral-100" {...props} />,
   h4: (props) => <h4 className="mt-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100" {...props} />,
-  p: (props) => <p className="my-4 text-base leading-8 text-neutral-700 dark:text-neutral-200" {...props} />,
+  p: (props) => <p className="my-4 leading-8 text-neutral-700 dark:text-neutral-200" {...props} />,
   ul: (props) => <ul className="my-4 list-disc pr-5 leading-7 text-neutral-700 dark:text-neutral-200" {...props} />,
   ol: (props) => <ol className="my-4 list-decimal pr-5 leading-7 text-neutral-700 dark:text-neutral-200" {...props} />,
   li: (props) => <li className="my-2" {...props} />,
@@ -73,12 +73,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   }
 
   return (
-    <div dir='rtl'>
-      <div className='fixed top-0 w-full'>
-        <Navbar />
-      </div>
-
-      <article className="mx-auto max-w-3xl px-4 py-12 mt-20 md:px-0 md:py-16">
+    <>
+      <Navbar />
+      <article className="mx-auto max-w-3xl px-4 py-12 md:px-0 md:py-16">
         <div className="text-sm text-neutral-500">
           <Link href="/about" className="hover:text-neutral-700">
             معرفی دادنوس
@@ -92,17 +89,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="mt-2 text-sm text-neutral-500">{formatDate(post.publishedAt)}</div>
         {post.coverImageUrl && (
           <div
-            className="mt-6 h-72 w-full rounded-4xl bg-neutral-200 bg-cover bg-center"
+            className="mt-8 h-72 w-full rounded-3xl bg-neutral-200 bg-cover bg-center"
             style={{ backgroundImage: `url(${post.coverImageUrl})` }}
           />
         )}
-        <div className="mt-10 [overflow-wrap:anywhere]">
+        <div className="mt-10">
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
             {post.content}
           </ReactMarkdown>
         </div>
       </article>
       <Footer />
-    </div>
+    </>
   )
 }

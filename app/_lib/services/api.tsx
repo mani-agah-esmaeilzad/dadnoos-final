@@ -43,35 +43,69 @@ export interface Message {
 
 export interface SubscriptionPlan {
   id: string
+  code?: string
   title: string
   duration_days: number
   token_quota: number
   is_organizational: boolean
+  price_cents?: number
+}
+
+export interface PaymentSummary {
+  id: string
+  gross_amount: number
+  discount_amount: number
+  net_amount: number
+  currency: string
+  discount_code: string | null
+  status: string
+  created_at: string
 }
 
 export interface UserSubscription {
   id: string
-  plan_id: string
-  plan_code: string
-  plan_title: string
+  plan_id: string | null
+  plan_code?: string | null
+  plan_title?: string | null
+  plan_price_cents?: number
   token_quota: number
   tokens_used: number
   remaining_tokens: number
   started_at: string
   expires_at: string
   active: boolean
+  upgrade_from_subscription_id?: string | null
 }
 
 export interface BillingResponse {
   has_subscription: boolean
-  subscription?: UserSubscription
+  subscription?: UserSubscription | null
+}
+
+export interface SubscribeResponse extends UserSubscription {
+  payment?: PaymentSummary
+}
+
+export interface PaymentRecord {
+  id: string
+  plan_id: string
+  plan_code?: string | null
+  plan_title?: string | null
+  gross_amount: number
+  discount_amount: number
+  net_amount: number
+  currency: string
+  status: string
+  discount_code?: string | null
+  upgrade_from_subscription_id?: string | null
+  created_at: string
 }
 
 export interface PlansResponse {
   plans: SubscriptionPlan[]
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number
   data?: any
   constructor(message: string, status: number, data?: any) {
@@ -237,6 +271,31 @@ class ApiService {
     return response.json()
   }
 
+  async textToSpeech(text: string, options: { format?: 'mp3' | 'wav' | 'opus' | 'flac'; voice?: string } = {}): Promise<Blob> {
+    const url = `${this.baseUrl}/api/v1/audio/tts`
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ text, ...options }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }))
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
+    }
+
+    const contentType = response.headers.get('Content-Type') || 'audio/mpeg'
+    const buffer = await response.arrayBuffer()
+    return new Blob([buffer], { type: contentType })
+  }
+
   async getPlans(includeOrg: boolean = false): Promise<{ plans: SubscriptionPlan[] }> {
     const params = includeOrg ? '?include_org=true' : ''
     const response = await this.request<{ plans: SubscriptionPlan[] }>(`/api/billing/plans${params}`, {
@@ -249,10 +308,20 @@ class ApiService {
     return this.request<BillingResponse>('/api/billing/me', { method: 'GET' })
   }
 
-  async subscribePlan(planId: string): Promise<UserSubscription> {
-    return this.request<UserSubscription>('/api/billing/subscribe', {
+  async subscribePlan(planId: string, discountCode?: string): Promise<SubscribeResponse> {
+    const payload: Record<string, string> = { plan_id: planId }
+    if (discountCode?.trim()) {
+      payload.discount_code = discountCode.trim()
+    }
+    return this.request<SubscribeResponse>('/api/billing/subscribe', {
       method: 'POST',
-      body: JSON.stringify({ plan_id: planId }),
+      body: JSON.stringify(payload),
+    })
+  }
+
+  async getPayments(): Promise<{ payments: PaymentRecord[] }> {
+    return this.request<{ payments: PaymentRecord[] }>('/api/billing/payments', {
+      method: 'GET',
     })
   }
 

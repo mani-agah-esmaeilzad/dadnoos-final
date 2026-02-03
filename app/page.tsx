@@ -122,7 +122,7 @@ export default function Home() {
             <Link
               href="/about"
               rel="noopener noreferrer"
-              className="rounded-full cursor-pointer whitespace-nowrap border border-solid border-black/[.25] dark:border-white/[.5] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent active:bg-[#f2f2f2a7] dark:active:bg-[#1a1a1a] active:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto"
+              className="rounded-full cursor-pointer whitespace-nowrap border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2]/25 dark:hover:bg-[#1a1a1a] hover:border-transparent active:bg-[#f2f2f2] dark:active:bg-[#1a1a1a] active:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto"
             >
               درباره {websiteName}
             </Link>

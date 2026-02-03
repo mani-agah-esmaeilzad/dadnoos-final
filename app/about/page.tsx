@@ -19,22 +19,19 @@ export default async function AboutPage() {
       <AboutScrollManager />
 
       <div className="items-center justify-items-center" dir="auto">
-        <div className='fixed top-0 w-full '>
-          <Navbar />
-        </div>
+        <Navbar />
 
-        <div className="font-sans p-3 sm:p-20 pb-10 pt-safe-20">
-          <BlogSection posts={blogPosts} />
-
+        <div className="font-sans p-4 sm:p-20 pb-10 pt-safe-20">
           <main className="flex flex-col gap-[32px] row-start-2 items-center">
-
-            <div className="min-h-screen space-y-4 py-10">
+            <div className="min-h-screen space-y-4 pb-10">
               <h1 className="text-4xl md:text-5xl font-bold text-center pt-10 md:-mt-5 md:pt-0 pb-10">
                 معرفی دادنوس:
               </h1>
 
               <FeaturesSection />
             </div>
+
+            <BlogSection posts={blogPosts} />
           </main>
         </div>
       </div>

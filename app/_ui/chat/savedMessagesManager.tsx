@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, FileText, FolderPlus, FolderOpen, MinusCircle, Trash2, X } from 'lucide-react'
+import { Download, FileText, FolderPlus, FolderOpen, MinusCircle, Trash2 } from 'lucide-react'
 import Popup from '@/app/_ui/components/popup'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
@@ -123,15 +123,15 @@ export function SavedMessagesManager({ isOpen, onClose }: SavedMessagesManagerPr
   return (
     <Popup visible={isOpen} onClose={onClose}>
       <div className="flex flex-col gap-4" dir="rtl">
-        <div className="flex items-center justify-between border-b border-neutral-400/25 pb-3 ps-2 my-2">
+        <div className="flex items-center justify-between border-b pb-3 mb-1">
           <div>
             <p className="text-lg font-semibold">فایل‌های ذخیره‌شده</p>
             <p className="text-xs text-neutral-500">
               پیام‌های AI را به فرمت Word دانلود کنید.
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="text-foreground" size={24} />
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            بستن
           </Button>
         </div>
 
@@ -143,23 +143,24 @@ export function SavedMessagesManager({ isOpen, onClose }: SavedMessagesManagerPr
                 {cases.length > 0 ? `${cases.length} پرونده فعال` : 'پرونده‌ای ثبت نشده'}
               </p>
             </div>
+            <FolderPlus className="text-[#9b956d]" size={24} />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               value={newCaseName}
               onChange={(event) => setNewCaseName(event.target.value)}
               placeholder="نام پرونده جدید"
+              className="text-sm"
             />
             <Button
               type="button"
-              className="whitespace-nowrap rounded-3xl"
+              className="whitespace-nowrap"
               disabled={!newCaseName.trim()}
               onClick={handleCreateCase}
             >
               افزودن پرونده
             </Button>
           </div>
-
           {sortedCases.length > 0 && (
             <div className="grid gap-2 max-h-48 overflow-y-auto pr-1">
               {sortedCases.map((caseItem) => (

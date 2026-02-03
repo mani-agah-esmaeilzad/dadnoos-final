@@ -3,9 +3,11 @@ import { z } from 'zod'
 
 import { requireAuth } from '@/lib/auth/guards'
 import { env } from '@/lib/env'
+import { ensurePlanCatalog } from '@/lib/billing/defaultPlan'
 
 const bodySchema = z.object({
   plan_id: z.string().min(1),
+  discount_code: z.string().trim().optional(),
 })
 
 export const runtime = 'nodejs'
@@ -31,10 +33,9 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { ensureDefaultPlan } = await import('@/lib/billing/defaultPlan')
     const { prisma } = await import('@/lib/db/prisma')
     const auth = requireAuth(req)
-    await ensureDefaultPlan()
+    await ensurePlanCatalog()
     const body = bodySchema.parse(await req.json())
 
     const plan = await prisma.subscriptionPlan.findUnique({ where: { id: body.plan_id } })
@@ -42,11 +43,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ detail: 'Plan not found.' }, { status: 404 })
     }
 
+    const activeSubscription = await prisma.userSubscription.findFirst({
+      where: { userId: auth.sub, active: true },
+      include: { plan: true },
+    })
+
+    if (activeSubscription?.planId === plan.id) {
+      return NextResponse.json({ detail: 'شما هم‌اکنون در همین پلن فعال هستید.' }, { status: 400 })
+    }
+
+    let upgradeCredit = 0
+    let upgradeFromId: string | undefined
+    if (activeSubscription) {
+      const previousPrice = activeSubscription.plan?.priceCents ?? 0
+      if (plan.priceCents <= previousPrice) {
+        return NextResponse.json({ detail: 'فقط امکان ارتقا به پلن بالاتر وجود دارد.' }, { status: 400 })
+      }
+      upgradeCredit = previousPrice
+      upgradeFromId = activeSubscription.id
+    }
+
     await prisma.userSubscription.updateMany({
       where: { userId: auth.sub, active: true },
       data: { active: false },
     })
 
+    const grossAmount = Math.max(plan.priceCents - upgradeCredit, 0)
+    let discountAmount = 0
+    let appliedDiscount: { id: string; code: string; percentage: number } | null = null
+
+    if (body.discount_code) {
+      const discountCode = body.discount_code.trim().toUpperCase()
+      const discount = await prisma.discountCode.findFirst({
+        where: { code: discountCode },
+      })
+      if (!discount) {
+        return NextResponse.json({ detail: 'کد تخفیف معتبر نیست.' }, { status: 400 })
+      }
+      if (!discount.isActive) {
+        return NextResponse.json({ detail: 'کد تخفیف غیرفعال است.' }, { status: 400 })
+      }
+      if (discount.expiresAt && discount.expiresAt.getTime() < Date.now()) {
+        return NextResponse.json({ detail: 'مهلت استفاده از کد تخفیف پایان یافته است.' }, { status: 400 })
+      }
+      if (discount.maxRedemptions) {
+        const usage = await prisma.discountRedemption.count({ where: { discountId: discount.id } })
+        if (usage >= discount.maxRedemptions) {
+          return NextResponse.json({ detail: 'حداکثر استفاده از این کد انجام شده است.' }, { status: 400 })
+        }
+      }
+      discountAmount = Math.floor((grossAmount * discount.percentage) / 100)
+      if (discountAmount > grossAmount) {
+        discountAmount = grossAmount
+      }
+      appliedDiscount = { id: discount.id, code: discount.code, percentage: discount.percentage }
+    }
+
+    const netAmount = Math.max(grossAmount - discountAmount, 0)
     const now = new Date()
     const expiresAt = new Date(now.getTime() + plan.durationDays * 24 * 60 * 60 * 1000)
 
@@ -59,11 +112,42 @@ export async function POST(req: NextRequest) {
         startedAt: now,
         expiresAt,
         active: true,
+        priceCents: plan.priceCents,
+        upgradedFromId: upgradeFromId,
       },
       include: { plan: true },
     })
 
-    return NextResponse.json({
+    const payment = await prisma.payment.create({
+      data: {
+        userId: auth.sub,
+        planId: plan.id,
+        subscriptionId: subscription.id,
+        discountId: appliedDiscount?.id,
+        status: 'SUCCEEDED',
+        grossAmount,
+        discountAmount,
+        netAmount,
+        currency: 'IRR',
+        upgradeFromSubscriptionId: upgradeFromId,
+        metadata: upgradeFromId ? { upgradeCredit } : undefined,
+      },
+      include: { discount: true },
+    })
+
+    if (appliedDiscount && discountAmount > 0) {
+      await prisma.discountRedemption.create({
+        data: {
+          discountId: appliedDiscount.id,
+          userId: auth.sub,
+          paymentId: payment.id,
+          percentage: appliedDiscount.percentage,
+          amountOff: discountAmount,
+        },
+      })
+    }
+
+    const responsePayload = {
       id: subscription.id,
       plan_id: subscription.planId,
       plan_code: subscription.plan?.code,
@@ -74,7 +158,21 @@ export async function POST(req: NextRequest) {
       started_at: subscription.startedAt.toISOString(),
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,
-    })
+      plan_price_cents: subscription.plan?.priceCents ?? 0,
+      upgrade_from_subscription_id: upgradeFromId ?? null,
+      payment: {
+        id: payment.id,
+        gross_amount: payment.grossAmount,
+        discount_amount: payment.discountAmount,
+        net_amount: payment.netAmount,
+        currency: payment.currency,
+        discount_code: payment.discount?.code ?? null,
+        status: payment.status,
+        created_at: payment.createdAt.toISOString(),
+      },
+    }
+
+    return NextResponse.json(responsePayload)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ detail: 'درخواست نامعتبر است.', issues: error.flatten() }, { status: 400 })

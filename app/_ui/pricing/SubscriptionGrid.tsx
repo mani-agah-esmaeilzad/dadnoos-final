@@ -44,7 +44,7 @@ export default function SubscriptionGrid({
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 w-full mt-4 text-xl md:text-2xl">
+    <div className="grid grid-cols-2 gap-4 w-full mt-4 text-xl md:text-2xl">
       {/* دایره روزها */}
       <div className="relative bg-black/35 dark:bg-black/55 w-full aspect-square rounded-4xl flex items-center justify-center">
         <div className="relative ml-10 mb-10">

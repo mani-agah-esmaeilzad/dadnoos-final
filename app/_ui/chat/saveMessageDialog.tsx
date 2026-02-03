@@ -59,7 +59,7 @@ export function SaveMessageDialog({
 
   return (
     <Popup visible={isOpen} onClose={onClose}>
-      <div className="space-y-4 p-1" dir="rtl">
+      <div className="space-y-4" dir="rtl">
         <div>
           <h2 className="text-lg font-semibold">ذخیره پیام در پرونده</h2>
           <p className="text-xs text-neutral-500 mt-1">
@@ -110,6 +110,7 @@ export function SaveMessageDialog({
                 value={newCaseName}
                 onChange={(event) => setNewCaseName(event.target.value)}
                 placeholder="مثل: پرونده مطالبه وجه شرکت الف"
+                className="text-sm"
               />
               <Button
                 type="button"
@@ -132,12 +133,10 @@ export function SaveMessageDialog({
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-          <Button size="lg" variant="outline" className='rounded-3xl' onClick={onClose}>
+          <Button variant="outline" onClick={onClose}>
             انصراف
           </Button>
           <Button
-            size="lg"
-            className='rounded-3xl'
             onClick={() => {
               onSubmit({
                 title: title.trim() || defaultTitle,
@@ -147,7 +146,7 @@ export function SaveMessageDialog({
             }}
             disabled={!title.trim() && !messageText.trim()}
           >
-            ذخیره در مدیریت پرونده
+            ذخیره در فایل‌منیجر
           </Button>
         </div>
       </div>

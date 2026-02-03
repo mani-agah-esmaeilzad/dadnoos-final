@@ -26,7 +26,7 @@ export * from './gharardad/partnershipAgreement'
 export * from './gharardad/salesAgreement'
 export * from './gharardad/generalContract'
 
-export * from './ezharname/contractCancellationDeclarationTemplate'
+// اظهارنامه (Notices)
 export * from './ezharname/debtDeclarationTemplate'
 export * from './ezharname/evictionDeclarationTemplate'
 export * from './ezharname/contractCancellationDeclarationTemplate'
