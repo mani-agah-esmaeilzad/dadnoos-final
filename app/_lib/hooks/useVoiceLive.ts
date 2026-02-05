@@ -96,8 +96,9 @@ export function useVoiceLive(autoPlayResponses: boolean = true) {
             base64,
             event.data.type?.split(';')[0] || 'audio/webm'
           )
-          if (result?.transcript) {
-            setTranscripts((prev) => [...prev, result.transcript])
+          const transcript = result?.transcript?.trim()
+          if (transcript) {
+            setTranscripts((prev) => [...prev, transcript])
           }
           if (result?.response?.text) {
             let audioUrl: string | undefined
