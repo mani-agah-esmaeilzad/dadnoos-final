@@ -2,8 +2,6 @@ import "@/app/globals.css"
 
 import type { Metadata, Viewport } from "next"
 
-import { Vazirmatn } from "next/font/google"
-
 import * as texts from '@/app/_text/common.js'
 
 import { cn } from "@/app/_lib/utils"
@@ -12,12 +10,6 @@ import RootLayoutClient from "@/app/layoutClient"
 import PullToRefreshLayout from "@/app/_ui/Pull-to-Refresh"
 
 import { ThemeProvider } from "@/context/ThemeProvider"
-
-const vazirmatn = Vazirmatn({
-  variable: "--font-vazirmatn",
-  subsets: ["arabic"],
-  display: "swap",
-})
 
 export const metadata: Metadata = {
   keywords: texts.keywords,
@@ -47,12 +39,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body
-        className={cn(
-          vazirmatn.variable,
-          'tracking-wide leading-relaxed antialiased'
-        )}
-      >
+      <body className={cn('tracking-wide leading-relaxed antialiased')}>
         <ThemeProvider>
           <PullToRefreshLayout>
             <RootLayoutClient>

@@ -22,7 +22,7 @@ interface ChatInputProps {
   isThinking: boolean
   setIsTyping: React.Dispatch<React.SetStateAction<boolean>>
   onInputChange: (value: string) => void
-  onSendMessage: (message: string | Blob) => void
+  onSendMessage: (message: string) => void | Promise<void>
   setIsUploadPanelOpen: (callback: (prev: boolean) => boolean) => void
   uploadedFiles?: UploadedFile[]
   removeUploadedFile?: (id: string) => void

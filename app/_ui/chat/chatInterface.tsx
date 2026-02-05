@@ -49,7 +49,7 @@ interface ChatInterfaceProps {
   collapsed: boolean
   inputValue: string
   onInputChange: (value: string) => void
-  onSendMessage: (message?: string | Blob) => void
+  onSendMessage: (message?: string) => void | Promise<void>
   onKeyPress: (e: React.KeyboardEvent) => void
   suggestions: string[]
   messages: MessageType[]

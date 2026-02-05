@@ -1,9 +1,10 @@
 import { listTrackingEvents } from '@/lib/admin/events'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
+import { withDbFallback } from '@/lib/db/fallback'
 
 interface EventsPageProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function parseParam(value?: string | string[]) {
@@ -40,21 +41,33 @@ export const metadata = {
 }
 
 export default async function AdminEventsPage({ searchParams }: EventsPageProps) {
-  const pageParam = parseParam(searchParams?.page)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const pageParam = parseParam(resolvedSearchParams.page)
   const page = Math.max(Number(pageParam ?? '1'), 1)
-  const eventType = parseParam(searchParams?.eventType) ?? ''
-  const userId = parseParam(searchParams?.userId) ?? ''
-  const from = parseParam(searchParams?.from) ?? ''
-  const to = parseParam(searchParams?.to) ?? ''
+  const eventType = parseParam(resolvedSearchParams.eventType) ?? ''
+  const userId = parseParam(resolvedSearchParams.userId) ?? ''
+  const from = parseParam(resolvedSearchParams.from) ?? ''
+  const to = parseParam(resolvedSearchParams.to) ?? ''
 
-  const data = await listTrackingEvents({
+  const fallbackData = {
+    total: 0,
     page,
     pageSize: 25,
-    eventType: eventType || undefined,
-    userId: userId || undefined,
-    from: from ? new Date(from) : undefined,
-    to: to ? new Date(to) : undefined,
-  })
+    items: [],
+  }
+  const data = await withDbFallback(
+    () =>
+      listTrackingEvents({
+        page,
+        pageSize: 25,
+        eventType: eventType || undefined,
+        userId: userId || undefined,
+        from: from ? new Date(from) : undefined,
+        to: to ? new Date(to) : undefined,
+      }),
+    fallbackData,
+    'admin-events'
+  )
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize))
 

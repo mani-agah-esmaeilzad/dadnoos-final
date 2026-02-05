@@ -47,6 +47,9 @@ const PLAN_MESSAGE_LIMITS: Record<string, number> = {
 const formatCurrency = (value: number) =>
   `${new Intl.NumberFormat('fa-IR').format(Math.max(0, Math.round(value)))} تومان`
 
+const formatCount = (value: number) =>
+  new Intl.NumberFormat('fa-IR').format(Math.max(0, Math.round(value)))
+
 const formatDate = (value?: string | null) => {
   if (!value) return '-'
   try {

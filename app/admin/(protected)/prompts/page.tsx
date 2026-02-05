@@ -1,5 +1,6 @@
 import PromptManager, { type PromptViewModel } from '@/app/admin/_components/prompt-manager'
 import { listAdminPrompts } from '@/lib/admin/prompts'
+import { withDbFallback } from '@/lib/db/fallback'
 
 export const metadata = {
   title: 'مدیریت پرامپت‌ها',
@@ -14,7 +15,7 @@ function toSerializablePrompt(prompt: PromptViewModel): PromptViewModel {
 }
 
 export default async function AdminPromptsPage() {
-  const prompts = await listAdminPrompts()
+  const prompts = await withDbFallback(() => listAdminPrompts(), [], 'admin-prompts')
   const serializable = prompts.map((prompt) =>
     toSerializablePrompt({
       slug: prompt.slug,

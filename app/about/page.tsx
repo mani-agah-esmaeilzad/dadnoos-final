@@ -4,6 +4,7 @@ import FeaturesSection from '@/app/_ui/about/FeaturesSection'
 import BlogSection from '@/app/_ui/about/BlogSection'
 import AboutScrollManager from '@/app/about/scroll-to-footer'
 import { listPublishedBlogPosts } from '@/lib/blog/posts'
+import { withDbFallback } from '@/lib/db/fallback'
 
 export const revalidate = 60
 
@@ -12,7 +13,11 @@ export const metadata = {
 }
 
 export default async function AboutPage() {
-  const blogPosts = await listPublishedBlogPosts(6)
+  const blogPosts = await withDbFallback(
+    () => listPublishedBlogPosts(6),
+    [],
+    'about-blog-posts'
+  )
 
   return (
     <>

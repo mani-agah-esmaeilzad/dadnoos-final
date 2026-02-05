@@ -4,9 +4,10 @@ import { listAdminUsers } from '@/lib/admin/users'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
 import UserActions from '@/app/admin/_components/user-actions'
+import { withDbFallback } from '@/lib/db/fallback'
 
 interface UsersPageProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 const PAGE_SIZE = 20
@@ -25,17 +26,29 @@ function buildQueryString(params: Record<string, string | number | undefined>) {
 }
 
 export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
-  const pageParam = parseParam(searchParams?.page)
-  const query = parseParam(searchParams?.query) ?? ''
-  const status = parseParam(searchParams?.status) ?? 'all'
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const pageParam = parseParam(resolvedSearchParams.page)
+  const query = parseParam(resolvedSearchParams.query) ?? ''
+  const status = parseParam(resolvedSearchParams.status) ?? 'all'
   const page = Math.max(Number(pageParam ?? '1'), 1)
 
-  const data = await listAdminUsers({
+  const fallbackData = {
+    total: 0,
     page,
     pageSize: PAGE_SIZE,
-    query: query || undefined,
-    status: status === 'all' ? undefined : status,
-  })
+    items: [],
+  }
+  const data = await withDbFallback(
+    () =>
+      listAdminUsers({
+        page,
+        pageSize: PAGE_SIZE,
+        query: query || undefined,
+        status: status === 'all' ? undefined : status,
+      }),
+    fallbackData,
+    'admin-users'
+  )
   const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize))
 
   return (

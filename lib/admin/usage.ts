@@ -135,7 +135,7 @@ export async function getTopMessagingUsers({
     },
     orderBy: {
       _count: {
-        _all: 'desc',
+        id: 'desc',
       },
     },
     take: limit,

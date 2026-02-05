@@ -61,7 +61,8 @@ export async function transcribeAudio({
   form.append('model', model)
   const normalizedMime = normalizeAudioMime(mimeType)
   const extension = MIME_EXTENSION_MAP[normalizedMime] || 'bin'
-  const blob = new Blob([buffer], { type: normalizedMime })
+  const uint8Array = Uint8Array.from(buffer)
+  const blob = new Blob([uint8Array], { type: normalizedMime })
   form.append('file', blob, `chunk.${extension}`)
   if (env.TRANSCRIPTION_LANGUAGE) {
     form.append('language', env.TRANSCRIPTION_LANGUAGE)

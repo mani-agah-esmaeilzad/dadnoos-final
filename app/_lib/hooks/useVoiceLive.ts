@@ -96,13 +96,14 @@ export function useVoiceLive(autoPlayResponses: boolean = true) {
             base64,
             event.data.type?.split(';')[0] || 'audio/webm'
           )
-          const transcript = result?.transcript?.trim()
-          if (transcript) {
-            setTranscripts((prev) => [...prev, transcript])
+          const transcriptValue = typeof result?.transcript === 'string' ? result.transcript.trim() : ''
+          if (transcriptValue) {
+            setTranscripts((prev) => [...prev, transcriptValue])
           }
-          if (result?.response?.text) {
+          const responseText = typeof result?.response?.text === 'string' ? result.response.text.trim() : ''
+          if (responseText) {
             let audioUrl: string | undefined
-            if (result.response.audio_base64) {
+            if (typeof result.response?.audio_base64 === 'string' && result.response.audio_base64) {
               const blob = base64ToBlob(
                 result.response.audio_base64,
                 result.response.mime_type || 'audio/mpeg'
@@ -118,7 +119,7 @@ export function useVoiceLive(autoPlayResponses: boolean = true) {
               ...prev,
               {
                 id: crypto.randomUUID(),
-                text: result.response.text,
+                text: responseText,
                 audioUrl,
               },
             ])
