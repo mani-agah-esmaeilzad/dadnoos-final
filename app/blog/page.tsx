@@ -2,6 +2,7 @@ import Navbar from '@/app/_ui/navbar'
 import Footer from '@/app/_ui/footer'
 import BlogCards from '@/app/_ui/blog/BlogCards'
 import { listPublishedBlogPosts } from '@/lib/blog/posts'
+import { withDbFallback } from '@/lib/db/fallback'
 
 export const revalidate = 60
 
@@ -10,7 +11,11 @@ export const metadata = {
 }
 
 export default async function BlogLandingPage() {
-  const posts = await listPublishedBlogPosts()
+  const posts = await withDbFallback(
+    () => listPublishedBlogPosts(),
+    [],
+    'blog-landing'
+  )
 
   return (
     <>

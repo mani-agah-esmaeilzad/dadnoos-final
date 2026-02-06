@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db/prisma'
-import { getTopUsageUsers } from '@/lib/admin/usage'
+import { getTopMessagingUsers } from '@/lib/admin/usage'
 
 interface DashboardRange {
   range?: '7d' | '30d'
@@ -17,6 +17,10 @@ export interface DashboardOverview {
     users: number
     conversations: number
     messages: number
+    messagesUsage: {
+      rangeTotal: number
+      last30Days: number
+    }
     tokens: {
       rangeTotal: number
       last30Days: number
@@ -28,9 +32,7 @@ export interface DashboardOverview {
     topUsers: {
       userId: string
       username: string
-      totalTokens: number
-      promptTokens: number
-      completionTokens: number
+      totalMessages: number
     }[]
     moduleDistribution: { module: string; totalTokens: number }[]
   }
@@ -69,6 +71,17 @@ async function sumTokensBetween(start: Date, end: Date) {
     _sum: { totalTokens: true },
   })
   return aggregate._sum.totalTokens ?? 0
+}
+
+async function countMessagesBetween(start: Date, end: Date) {
+  return prisma.message.count({
+    where: {
+      timestamp: {
+        gte: start,
+        lte: end,
+      },
+    },
+  })
 }
 
 async function buildTokensPerDay(start: Date, end: Date) {
@@ -140,7 +153,18 @@ export async function getDashboardOverview(params: DashboardRange = {}): Promise
 
   const thirtyDaysAgo = startOfDay(addDays(now, -29))
 
-  const [users, conversations, messages, tokensRange, tokens30d, tokensPerDay, messagesPerDay, topUsers, moduleGroups] =
+  const [
+    users,
+    conversations,
+    messages,
+    tokensRange,
+    tokens30d,
+    tokensPerDay,
+    messagesPerDay,
+    topUsers,
+    moduleGroups,
+    messages30d,
+  ] =
     await Promise.all([
       prisma.user.count(),
       prisma.chatSession.count(),
@@ -149,7 +173,7 @@ export async function getDashboardOverview(params: DashboardRange = {}): Promise
       sumTokensBetween(thirtyDaysAgo, endOfDay(now)),
       buildTokensPerDay(startDate, endDate),
       buildMessagesPerDay(startDate, endDate),
-      getTopUsageUsers({ from: startDate, to: endDate, limit: 5 }),
+      getTopMessagingUsers({ from: startDate, to: endDate, limit: 5 }),
       prisma.tokenUsage.groupBy({
         by: ['module'],
         where: {
@@ -162,6 +186,7 @@ export async function getDashboardOverview(params: DashboardRange = {}): Promise
           totalTokens: true,
         },
       }),
+      countMessagesBetween(thirtyDaysAgo, endOfDay(now)),
     ])
 
   const moduleDistribution = moduleGroups
@@ -170,6 +195,8 @@ export async function getDashboardOverview(params: DashboardRange = {}): Promise
       totalTokens: group._sum.totalTokens ?? 0,
     }))
     .sort((a, b) => b.totalTokens - a.totalTokens)
+
+  const messagesRangeTotal = messagesPerDay.reduce((sum, day) => sum + day.count, 0)
 
   return {
     range: {
@@ -181,6 +208,10 @@ export async function getDashboardOverview(params: DashboardRange = {}): Promise
       users,
       conversations,
       messages,
+      messagesUsage: {
+        rangeTotal: messagesRangeTotal,
+        last30Days: messages30d,
+      },
       tokens: {
         rangeTotal: tokensRange,
         last30Days: tokens30d,

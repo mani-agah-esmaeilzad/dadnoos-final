@@ -47,6 +47,7 @@ export interface SubscriptionPlan {
   title: string
   duration_days: number
   token_quota: number
+  message_quota?: number
   is_organizational: boolean
   price_cents?: number
 }
@@ -71,6 +72,9 @@ export interface UserSubscription {
   token_quota: number
   tokens_used: number
   remaining_tokens: number
+  message_quota?: number
+  messages_used?: number
+  remaining_messages?: number
   started_at: string
   expires_at: string
   active: boolean
@@ -103,6 +107,15 @@ export interface PaymentRecord {
 
 export interface PlansResponse {
   plans: SubscriptionPlan[]
+}
+
+export interface VoiceLiveChunkResponse {
+  transcript?: string
+  response?: {
+    text: string
+    audio_base64?: string
+    mime_type?: string
+  }
 }
 
 export class ApiError extends Error {
@@ -271,7 +284,15 @@ class ApiService {
     return response.json()
   }
 
-  async textToSpeech(text: string, options: { format?: 'mp3' | 'wav' | 'opus' | 'flac'; voice?: string } = {}): Promise<Blob> {
+  async textToSpeech(
+    text: string,
+    options: {
+      response_format?: 'mp3' | 'wav' | 'opus' | 'flac' | 'aac' | 'pcm'
+      voice?: string | { name: string; languageCode?: string }
+      speed?: number
+      instructions?: string
+    } = {}
+  ): Promise<Blob> {
     const url = `${this.baseUrl}/api/v1/audio/tts`
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -283,7 +304,13 @@ class ApiService {
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ text, ...options }),
+      body: JSON.stringify({
+        input: text,
+        voice: options.voice,
+        response_format: options.response_format,
+        speed: options.speed,
+        instructions: options.instructions,
+      }),
     })
 
     if (!response.ok) {
@@ -294,6 +321,35 @@ class ApiService {
     const contentType = response.headers.get('Content-Type') || 'audio/mpeg'
     const buffer = await response.arrayBuffer()
     return new Blob([buffer], { type: contentType })
+  }
+
+  async startVoiceLiveSession(): Promise<{ session_id: string; expires_in: number }> {
+    return this.request('/api/v1/audio/live', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'start' }),
+    })
+  }
+
+  async sendVoiceLiveChunk(sessionId: string, base64Audio: string, mimeType: string) {
+    return this.request<VoiceLiveChunkResponse>('/api/v1/audio/live', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'chunk',
+        session_id: sessionId,
+        base64_audio: base64Audio,
+        mime_type: mimeType,
+      }),
+    })
+  }
+
+  async stopVoiceLiveSession(sessionId: string) {
+    return this.request('/api/v1/audio/live', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'stop',
+        session_id: sessionId,
+      }),
+    })
   }
 
   async getPlans(includeOrg: boolean = false): Promise<{ plans: SubscriptionPlan[] }> {

@@ -22,12 +22,14 @@ interface ChatInputProps {
   isThinking: boolean
   setIsTyping: React.Dispatch<React.SetStateAction<boolean>>
   onInputChange: (value: string) => void
-  onSendMessage: (message: string | Blob) => void
+  onSendMessage: (message: string) => void | Promise<void>
   setIsUploadPanelOpen: (callback: (prev: boolean) => boolean) => void
   uploadedFiles?: UploadedFile[]
   removeUploadedFile?: (id: string) => void
   shouldResetAudio?: boolean
   setShouldResetAudio?: any
+  voiceEnabled?: boolean
+  autoSendVoice?: boolean
 }
 
 const blobToBase64 = (blob: Blob): Promise<string> =>
@@ -55,6 +57,8 @@ export default function ChatInput({
   shouldResetAudio,
   setShouldResetAudio,
   setIsUploadPanelOpen,
+  voiceEnabled = false,
+  autoSendVoice = false,
 }: ChatInputProps) {
   const isMobile = useIsMobile()
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -212,9 +216,14 @@ export default function ChatInput({
       setIsConverting(true)
       const base64 = await blobToBase64(recordedBlob)
       const result = await apiService.speechToText(base64, "audio/webm")
-      onInputChange(result.text)
-      // onSendMessage(result.text)
-
+      const finalText = result.text?.trim()
+      if (!finalText) {
+        alert("متن معتبری شناسایی نشد.")
+      } else if (voiceEnabled && autoSendVoice) {
+        onSendMessage(finalText)
+      } else {
+        onInputChange(result.text)
+      }
     } catch (err) {
       console.error("Speech to Text Error:", err)
       alert("خطا در تبدیل گفتار به متن")
@@ -224,6 +233,24 @@ export default function ChatInput({
     setRecordedBlob(null)
     setAudioURL(null)
     setIsRecording(false)
+  }
+
+  const handleMicButton = () => {
+    if (isConverting) return
+    if (isRecording) {
+      handleStopRecording()
+    } else if (audioURL) {
+      handleConvertAudio()
+    } else {
+      handleStartRecording()
+    }
+  }
+
+  const handleSendText = () => {
+    const textToSend = inputValue.trim()
+    if (!textToSend || isThinking || isTyping) return
+    onSendMessage(textToSend)
+    onInputChange("")
   }
 
   // --- Update playhead for waveform
@@ -268,8 +295,7 @@ export default function ChatInput({
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        if (inputValue.trim().length === 0 || isThinking || isTyping) return
-        onSendMessage(inputValue)
+        handleSendText()
       }}
       className={cn(
         !keyboardOpen && "mb-safe",
@@ -278,47 +304,25 @@ export default function ChatInput({
     >
       <div className="absolute bottom-0 bg-white dark:bg-background md:dark:bg-[#202020] rounded-t-[29px] size-full w-full" />
 
-      <div className="relative flex w-full items-end rounded-3xl md:rounded-4xl bg-[#F2F2F2] md:bg-white border-0 md:border md:border-neutral-400/25 dark:md:border-transparent md:shadow-md dark:bg-[#303030] backdrop-blur-3xl transition-all">
-        <div className="p-1.5 pl-0 md:p-2.5">
+      <div className="relative flex w-full items-end rounded-3xl md:rounded-4xl bg-[#F2F2F2] md:bg-white border-0 md:border md:border-neutral-400/25 dark:md:border-transparent md:shadow-md dark:bg-[#303030] backdrop-blur-3xl transition-all px-1.5">
+        <div className="flex flex-col items-center justify-center p-1.5">
           <button
             type="button"
             title={
-              isThinking
-                ? "در حال پاسخ"
-                : inputValue.trim().length > 0
-                  ? "ارسال پیام"
-                  : isRecording
-                    ? "توقف ضبط"
-                    : audioURL
-                      ? "ارسال متن تبدیل"
-                      : "شروع ضبط"
+              isConverting
+                ? "در حال تبدیل"
+                : isRecording
+                  ? "توقف ضبط"
+                  : audioURL
+                    ? "تبدیل و ارسال"
+                    : "ضبط صوت"
             }
-            onClick={() => {
-              if (isConverting) {
-                return
-              } else if (isThinking || isTyping) {
-                onSendMessage("__PAUSE_THINKING__")
-                setIsTyping(false)
-              } else if (inputValue.trim().length > 0) {
-                onSendMessage(inputValue)
-              } else if (isRecording) {
-                handleStopRecording()
-              } else if (audioURL) {
-                handleConvertAudio()
-              } else {
-                handleStartRecording()
-              }
-            }}
+            onClick={handleMicButton}
+            disabled={isThinking || isTyping}
             className={cn(
-              (
-                isConverting ||
-                isTyping ||
-                isThinking ||
-                inputValue.trim().length > 0 ||
-                isRecording ||
-                audioURL
-              ) && "dark:bg-white bg-black dark:text-black text-white",
-              "aspect-square m-0.5 ml-0 h-8 flex items-center justify-center p-0.5 rounded-full cursor-pointer transition-all disabled:bg-black/75 dark:disabled:bg-white/75 disabled:opacity-50 disabled:cursor-auto"
+              "aspect-square size-10 md:size-11 flex items-center justify-center rounded-full border border-neutral-300/60 dark:border-neutral-700 transition-all",
+              (isRecording || isConverting || audioURL) && "bg-black text-white dark:bg-white dark:text-black border-transparent",
+              (isThinking || isTyping) && "opacity-50 cursor-not-allowed"
             )}
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -326,15 +330,11 @@ export default function ChatInput({
                 key={
                   isConverting
                     ? "audioToText"
-                    : isTyping
-                      ? "typing"
-                      : inputValue.trim().length > 0
-                        ? "sendText"
-                        : isRecording
-                          ? "stop"
-                          : audioURL
-                            ? "sendAudio"
-                            : "record"
+                    : isRecording
+                      ? "stop"
+                      : audioURL
+                        ? "sendAudio"
+                        : "record"
                 }
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -343,24 +343,21 @@ export default function ChatInput({
                 className="flex items-center justify-center"
               >
                 {isConverting ? (
-                  <PencilLine className="size-4 animate-pulse" />
-                ) : isTyping || isThinking ? (
-                  <div className="size-3 bg-white dark:bg-black/75 rounded-xs" />
-                ) : inputValue.trim().length > 0 ? (
-                  <ArrowUp className="size-5" />
+                  <PencilLine className="size-5 animate-pulse" />
                 ) : isRecording ? (
-                  <Pause className="size-4 animate-pulse" />
+                  <Pause className="size-5 animate-pulse" />
                 ) : audioURL ? (
-                  <ArrowUp className="size-5" />
+                  <ArrowUp className="size-6" />
                 ) : (
                   <AudioLines className="size-6" />
                 )}
               </motion.div>
             </AnimatePresence>
           </button>
+          <span className="text-[10px] text-center text-neutral-500 mt-1">صوت</span>
         </div>
 
-        <div className="flex items-center w-full my-auto">
+        <div className="flex items-center w-full my-auto px-1">
           <AnimatePresence mode="wait">
             {/* Textarea */}
             {!isRecording && !audioURL && !isConverting && (
@@ -433,11 +430,7 @@ export default function ChatInput({
                       if (e.key === "Enter") {
                         if (e.shiftKey) return
                         e.preventDefault()
-                        const textToSend = inputValue
-                        if (textToSend.trim().length > 0 && !isTyping && !isThinking) {
-                          onSendMessage(textToSend)
-                          onInputChange("")
-                        }
+                        handleSendText()
                       }
                     }}
                   />
@@ -565,6 +558,27 @@ export default function ChatInput({
             )}
           </AnimatePresence>
         </div>
+      </div>
+
+      <div className="flex flex-col items-center justify-center p-1.5">
+        <button
+          type="button"
+          onClick={() => {
+            if (isThinking || isTyping || !inputValue.trim()) return
+            handleSendText()
+          }}
+          disabled={isThinking || isTyping || inputValue.trim().length === 0}
+          title={isThinking ? "در حال پاسخ" : "ارسال پیام"}
+          className={cn(
+            "aspect-square size-10 md:size-11 flex items-center justify-center rounded-full transition-all border border-transparent text-white",
+            inputValue.trim().length > 0 && !isThinking && !isTyping
+              ? "bg-black dark:bg-white dark:text-black"
+              : "bg-neutral-300/60 dark:bg-neutral-700/60 text-neutral-600 dark:text-neutral-300 cursor-not-allowed"
+          )}
+        >
+          <ArrowUp className="size-6" />
+        </button>
+        <span className="text-[10px] text-center text-neutral-500 mt-1">ارسال</span>
       </div>
 
       {!isRecording && !audioURL && !isConverting && (

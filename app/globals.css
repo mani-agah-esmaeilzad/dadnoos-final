@@ -6,6 +6,7 @@
   --scrollbar-thumb: #d4d4d4;
   --scrollbar-thumb-border: #f9fafb;
   --scrollbar-thumb-hover: #737373;
+  --font-vazirmatn: 'Tahoma', 'Segoe UI', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -294,7 +295,6 @@ body {
   padding-bottom: 1.5rem;
   max-width: 100%;
 }
-
 @media (display-mode: standalone) {
   @layer utilities {
     .top-safe {

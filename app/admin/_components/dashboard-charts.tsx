@@ -17,9 +17,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_ui/components/card'
 
 interface DashboardChartsProps {
-  tokensPerDay: { date: string; totalTokens: number }[]
   messagesPerDay: { date: string; count: number }[]
-  topUsers: { userId: string; username: string; totalTokens: number }[]
+  topUsers: { userId: string; username: string; totalMessages: number }[]
   moduleDistribution: { module: string; totalTokens: number }[]
 }
 
@@ -29,34 +28,17 @@ function formatNumber(value: number) {
   return value.toLocaleString('fa-IR')
 }
 
-export default function DashboardCharts({ tokensPerDay, messagesPerDay, topUsers, moduleDistribution }: DashboardChartsProps) {
+export default function DashboardCharts({ messagesPerDay, topUsers, moduleDistribution }: DashboardChartsProps) {
   const sanitizedModules = moduleDistribution.slice(0, 6)
+  const recentDays = [...messagesPerDay]
+    .slice(-7)
+    .reverse()
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>روند مصرف توکن</CardTitle>
-        </CardHeader>
-        <CardContent className="h-80">
-          {tokensPerDay.length ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={tokensPerDay}>
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={formatNumber} width={80} />
-                <Tooltip formatter={(value) => formatNumber(typeof value === 'number' ? value : Number(value ?? 0))} />
-                <Line type="monotone" dataKey="totalTokens" stroke="#C8A175" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-sm text-neutral-500">داده‌ای برای نمایش وجود ندارد.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>پیام‌ها بر اساس روز</CardTitle>
+          <CardTitle>روند پیام‌ها</CardTitle>
         </CardHeader>
         <CardContent className="h-80">
           {messagesPerDay.length ? (
@@ -85,7 +67,7 @@ export default function DashboardCharts({ tokensPerDay, messagesPerDay, topUsers
                 <XAxis dataKey="username" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={formatNumber} width={70} />
                 <Tooltip formatter={(value) => formatNumber(typeof value === 'number' ? value : Number(value ?? 0))} />
-                <Bar dataKey="totalTokens" fill="#12B886">
+                <Bar dataKey="totalMessages" fill="#12B886">
                   {topUsers.map((_, index) => (
                     <Cell key={`bar-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
@@ -100,7 +82,7 @@ export default function DashboardCharts({ tokensPerDay, messagesPerDay, topUsers
 
       <Card>
         <CardHeader>
-          <CardTitle>توزیع ماژول‌ها</CardTitle>
+          <CardTitle>توزیع ماژول‌ها (توکن)</CardTitle>
         </CardHeader>
         <CardContent className="h-80">
           {sanitizedModules.length ? (
@@ -123,6 +105,26 @@ export default function DashboardCharts({ tokensPerDay, messagesPerDay, topUsers
             </ResponsiveContainer>
           ) : (
             <p className="text-sm text-neutral-500">توزیع ماژولی ثبت نشده است.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>۷ روز اخیر (تعداد پیام)</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80">
+          {recentDays.length ? (
+            <ul className="space-y-3 text-sm">
+              {recentDays.map((day) => (
+                <li key={day.date} className="flex items-center justify-between rounded-2xl border border-neutral-200/70 px-3 py-2 dark:border-neutral-800/70">
+                  <span className="text-neutral-500">{day.date}</span>
+                  <span className="font-semibold">{formatNumber(day.count)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-neutral-500">داده‌ای ثبت نشده است.</p>
           )}
         </CardContent>
       </Card>

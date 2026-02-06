@@ -1,9 +1,10 @@
 import { getUsageBreakdown, getTopUsageUsers } from '@/lib/admin/usage'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
+import { withDbFallback } from '@/lib/db/fallback'
 
 interface UsagePageProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function parseParam(value?: string | string[]) {
@@ -58,8 +59,9 @@ function UsageTable({
 }
 
 export default async function AdminUsagePage({ searchParams }: UsagePageProps) {
-  const fromParam = parseParam(searchParams?.from)
-  const toParam = parseParam(searchParams?.to)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const fromParam = parseParam(resolvedSearchParams.from)
+  const toParam = parseParam(resolvedSearchParams.to)
   const now = new Date()
   const defaultFrom = new Date(now)
   defaultFrom.setDate(now.getDate() - 7)
@@ -67,10 +69,26 @@ export default async function AdminUsagePage({ searchParams }: UsagePageProps) {
   const toDate = toParam ? new Date(toParam) : now
 
   const [daily, byModel, byModule, topUsers] = await Promise.all([
-    getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'day' }),
-    getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'model' }),
-    getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'module' }),
-    getTopUsageUsers({ from: fromDate, to: toDate, limit: 5 }),
+    withDbFallback(
+      () => getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'day' }),
+      [],
+      'admin-usage-daily'
+    ),
+    withDbFallback(
+      () => getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'model' }),
+      [],
+      'admin-usage-model'
+    ),
+    withDbFallback(
+      () => getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'module' }),
+      [],
+      'admin-usage-module'
+    ),
+    withDbFallback(
+      () => getTopUsageUsers({ from: fromDate, to: toDate, limit: 5 }),
+      [],
+      'admin-usage-top-users'
+    ),
   ])
 
   return (

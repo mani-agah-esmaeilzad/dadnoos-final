@@ -44,13 +44,24 @@ export async function POST(req: NextRequest) {
       windowSeconds: env.RATE_LIMIT_WINDOW_SEC,
     })
 
-    const cooldown = await redis.get(otpCooldownKey(normalized))
-    if (cooldown) {
-      return NextResponse.json({ detail: 'لطفاً کمی بعد دوباره تلاش کنید.' }, { status: 429 })
-    }
-
     const ttl = env.OTP_TTL_SECONDS
     const attempts = env.OTP_MAX_ATTEMPTS
+    const requireRedis = !(env.OTP_DEV_MODE || env.OTP_BYPASS_IN_DEV)
+
+    if (requireRedis) {
+      try {
+        const cooldown = await redis.get(otpCooldownKey(normalized))
+        if (cooldown) {
+          return NextResponse.json({ detail: 'لطفاً کمی بعد دوباره تلاش کنید.' }, { status: 429 })
+        }
+      } catch (error) {
+        console.error('OTP cooldown redis error:', (error as Error).message)
+        return NextResponse.json(
+          { detail: 'سرویس ارسال کد موقتا در دسترس نیست. لطفاً دقایقی بعد تلاش کنید.' },
+          { status: 503 }
+        )
+      }
+    }
 
     let code: string
     let provider = 'dev'
@@ -90,19 +101,17 @@ export async function POST(req: NextRequest) {
       code = code || generateOtpCode()
     }
 
-    const requireRedis = !(env.OTP_DEV_MODE || env.OTP_BYPASS_IN_DEV)
+    if (requireRedis) {
+      try {
+        await redis
+          .multi()
+          .setex(otpKey(normalized), ttl, code)
+          .setex(otpAttemptsKey(normalized), ttl, attempts.toString())
+          .exec()
 
-    try {
-      await redis
-        .multi()
-        .setex(otpKey(normalized), ttl, code)
-        .setex(otpAttemptsKey(normalized), ttl, attempts.toString())
-        .exec()
-
-      await redis.setex(otpCooldownKey(normalized), env.OTP_COOLDOWN_SECONDS, '1')
-    } catch (error) {
-      console.error('OTP redis error:', (error as Error).message)
-      if (requireRedis) {
+        await redis.setex(otpCooldownKey(normalized), env.OTP_COOLDOWN_SECONDS, '1')
+      } catch (error) {
+        console.error('OTP redis error:', (error as Error).message)
         return NextResponse.json(
           { detail: 'سرویس ارسال کد موقتا در دسترس نیست. لطفاً دقایقی بعد تلاش کنید.' },
           { status: 503 }

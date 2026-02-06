@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { env } from '@/lib/env'
 import { BUILT_IN_PLANS, ensurePlanCatalog } from '@/lib/billing/defaultPlan'
+import { getPlanMessageLimit } from '@/lib/billing/messageQuota'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,7 @@ function buildFallbackPlans(includeOrg: boolean) {
     title: plan.title,
     duration_days: plan.durationDays,
     token_quota: plan.tokenQuota,
+    message_quota: getPlanMessageLimit(plan.code),
     is_organizational: plan.isOrganizational ?? false,
     price_cents: plan.priceCents,
   }))
@@ -42,6 +44,7 @@ export async function GET(req: NextRequest) {
       title: plan.title,
       duration_days: plan.durationDays,
       token_quota: plan.tokenQuota,
+       message_quota: getPlanMessageLimit(plan.code),
       is_organizational: plan.isOrganizational,
       price_cents: plan.priceCents,
     }))

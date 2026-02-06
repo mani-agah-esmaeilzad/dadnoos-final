@@ -110,3 +110,44 @@ export async function getTopUsageUsers({
     completionTokens: group._sum.completionTokens ?? 0,
   }))
 }
+
+export async function getTopMessagingUsers({
+  from,
+  to,
+  limit,
+}: {
+  from?: Date
+  to?: Date
+  limit: number
+}) {
+  const where: Record<string, unknown> = {}
+  if (from || to) {
+    where['timestamp'] = {
+      gte: from,
+      lte: to,
+    }
+  }
+  const groups = await prisma.message.groupBy({
+    by: ['userId'],
+    where,
+    _count: {
+      _all: true,
+    },
+    orderBy: {
+      _count: {
+        id: 'desc',
+      },
+    },
+    take: limit,
+  })
+  const users = await prisma.user.findMany({
+    where: { id: { in: groups.map((g) => g.userId) } },
+    select: { id: true, username: true },
+  })
+  const nameMap = new Map(users.map((user) => [user.id, user.username]))
+  return groups.map((group) => ({
+    userId: group.userId,
+    username: nameMap.get(group.userId) || group.userId,
+    totalMessages: group._count._all ?? 0,
+  }))
+}

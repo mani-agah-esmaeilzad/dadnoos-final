@@ -63,6 +63,7 @@ export default function C() {
       if (!apiService.token) {
         setIsAuthenticating(false)
         removeUser()
+        router.replace('/auth')
         return
       }
 
@@ -73,6 +74,7 @@ export default function C() {
         console.error("Authentication failed:", error)
         apiService.setToken(null)
         removeUser()
+        router.replace('/auth')
       } finally {
         setIsAuthenticating(false)
       }

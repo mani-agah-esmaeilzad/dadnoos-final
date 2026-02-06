@@ -2,9 +2,10 @@ import SupportInboxClient from '@/app/admin/_components/support-inbox'
 import { listSupportConversations } from '@/lib/admin/support'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
+import { withDbFallback } from '@/lib/db/fallback'
 
 interface SupportPageProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function parseParam(value?: string | string[]) {
@@ -25,23 +26,35 @@ export const metadata = {
 }
 
 export default async function AdminSupportPage({ searchParams }: SupportPageProps) {
-  const pageParam = parseParam(searchParams?.page)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const pageParam = parseParam(resolvedSearchParams.page)
   const page = Math.max(Number(pageParam ?? '1'), 1)
-  const query = parseParam(searchParams?.query) ?? ''
-  const userId = parseParam(searchParams?.userId) ?? ''
-  const flag = parseParam(searchParams?.flag) ?? 'any'
-  const from = parseParam(searchParams?.from) ?? ''
-  const to = parseParam(searchParams?.to) ?? ''
+  const query = parseParam(resolvedSearchParams.query) ?? ''
+  const userId = parseParam(resolvedSearchParams.userId) ?? ''
+  const flag = parseParam(resolvedSearchParams.flag) ?? 'any'
+  const from = parseParam(resolvedSearchParams.from) ?? ''
+  const to = parseParam(resolvedSearchParams.to) ?? ''
 
-  const data = await listSupportConversations({
+  const fallbackData = {
+    total: 0,
     page,
     pageSize: 20,
-    query: query || undefined,
-    userId: userId || undefined,
-    from: from ? new Date(from) : undefined,
-    to: to ? new Date(to) : undefined,
-    flag: flag as 'any' | 'support' | 'reported',
-  })
+    items: [],
+  }
+  const data = await withDbFallback(
+    () =>
+      listSupportConversations({
+        page,
+        pageSize: 20,
+        query: query || undefined,
+        userId: userId || undefined,
+        from: from ? new Date(from) : undefined,
+        to: to ? new Date(to) : undefined,
+        flag: flag as 'any' | 'support' | 'reported',
+      }),
+    fallbackData,
+    'admin-support'
+  )
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize))
 

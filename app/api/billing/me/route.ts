@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const { getActiveSubscription } = await import('@/lib/billing/quota')
+    const { getPlanMessageLimit } = await import('@/lib/billing/messageQuota')
     const { prisma } = await import('@/lib/db/prisma')
     const auth = requireAuth(req)
     const subscription = await getActiveSubscription(auth.sub)
@@ -29,6 +30,18 @@ export async function GET(req: NextRequest) {
     const plan = subscription.planId
       ? await prisma.subscriptionPlan.findUnique({ where: { id: subscription.planId } })
       : null
+    const messageQuota = getPlanMessageLimit(plan?.code)
+    const messagesUsed = await prisma.message.count({
+      where: {
+        userId: auth.sub,
+        role: 'user',
+        timestamp: {
+          gte: subscription.startedAt,
+          lte: subscription.expiresAt,
+        },
+      },
+    })
+
     const payload = {
       id: subscription.id,
       plan_id: subscription.planId,
@@ -37,6 +50,9 @@ export async function GET(req: NextRequest) {
       token_quota: subscription.tokenQuota,
       tokens_used: subscription.tokensUsed,
       remaining_tokens: subscription.tokenQuota - subscription.tokensUsed,
+      message_quota: messageQuota,
+      messages_used: messagesUsed,
+      remaining_messages: Math.max(messageQuota - messagesUsed, 0),
       started_at: subscription.startedAt.toISOString(),
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,

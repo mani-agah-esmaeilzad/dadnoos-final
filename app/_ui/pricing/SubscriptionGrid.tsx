@@ -8,6 +8,8 @@ interface SubscriptionGridProps {
   started_at: any
   remaining_tokens: number
   token_quota: number
+  remaining_messages?: number
+  message_quota?: number
   daysRemaining: number
   subscription: any
   daysTotal: number
@@ -18,12 +20,18 @@ export default function SubscriptionGrid({
   started_at,
   remaining_tokens,
   token_quota,
+  remaining_messages,
+  message_quota,
   daysRemaining,
   subscription,
   daysTotal,
 }: SubscriptionGridProps) {
   const daysPercent = daysRemaining / daysTotal
-  const tokensPercent = remaining_tokens / token_quota
+  const effectiveMessageQuota = message_quota || token_quota || 1
+  const effectiveRemainingMessages =
+    typeof remaining_messages === 'number' ? remaining_messages : remaining_tokens
+  const messagesPercent =
+    effectiveMessageQuota > 0 ? effectiveRemainingMessages / effectiveMessageQuota : 0
 
   const started = new Date(started_at)
   const expires = new Date(expires_at)
@@ -96,7 +104,7 @@ export default function SubscriptionGrid({
         </motion.div>
       </div>
 
-      {/* دایره توکن */}
+      {/* دایره پیام‌ها */}
       <div className="relative bg-black/35 dark:bg-black/55 w-full aspect-square rounded-4xl flex items-center justify-center">
         <div className="relative ml-10 mb-10">
           <svg className="size-24 md:size-36 -rotate-90" viewBox="0 0 100 100">
@@ -118,7 +126,7 @@ export default function SubscriptionGrid({
               strokeDasharray={CIRCUMFERENCE}
               strokeLinecap="round"
               initial={{ strokeDashoffset: CIRCUMFERENCE }}
-              animate={{ strokeDashoffset: CIRCUMFERENCE * (1 - tokensPercent) }}
+              animate={{ strokeDashoffset: CIRCUMFERENCE * (1 - messagesPercent) }}
               transition={{ duration: 1, ease: "easeOut" }}
             />
           </svg>
@@ -128,7 +136,7 @@ export default function SubscriptionGrid({
             animate={{ scale: 1 }}
             transition={{ delay: 0.5 }}
           >
-            {toPersianNumber((tokensPercent * 100).toFixed(1))}٪
+            {toPersianNumber((messagesPercent * 100).toFixed(1))}٪
           </motion.div>
         </div>
 
@@ -139,11 +147,11 @@ export default function SubscriptionGrid({
           transition={{ delay: 0.5 }}
         >
           <div className="text-xs flex gap-x-0.5 mb-1.5">
-            <span>{toPersianNumber(remaining_tokens)}</span>
+            <span>{toPersianNumber(effectiveRemainingMessages)}</span>
             <span className="font-bold">/</span>
-            <span>{toPersianNumber(token_quota)}</span>
+            <span>{toPersianNumber(effectiveMessageQuota)}</span>
           </div>
-          <span className="font-semibold">توکن</span>
+          <span className="font-semibold">پیام</span>
         </motion.div>
       </div>
 

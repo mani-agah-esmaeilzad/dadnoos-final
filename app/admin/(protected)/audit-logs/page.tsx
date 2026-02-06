@@ -1,9 +1,10 @@
 import { listAuditLogs } from '@/lib/admin/audit'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
+import { withDbFallback } from '@/lib/db/fallback'
 
 interface AuditLogsPageProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function parseParam(value?: string | string[]) {
@@ -40,12 +41,13 @@ export const metadata = {
 }
 
 export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPageProps) {
-  const pageParam = parseParam(searchParams?.page)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const pageParam = parseParam(resolvedSearchParams.page)
   const page = Math.max(Number(pageParam ?? '1'), 1)
-  const adminId = parseParam(searchParams?.adminId) ?? ''
-  const actionType = parseParam(searchParams?.actionType) ?? ''
-  const from = parseParam(searchParams?.from) ?? ''
-  const to = parseParam(searchParams?.to) ?? ''
+  const adminId = parseParam(resolvedSearchParams.adminId) ?? ''
+  const actionType = parseParam(resolvedSearchParams.actionType) ?? ''
+  const from = parseParam(resolvedSearchParams.from) ?? ''
+  const to = parseParam(resolvedSearchParams.to) ?? ''
 
   const filters = {
     adminId: adminId || undefined,
@@ -54,14 +56,25 @@ export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPage
     to: to ? new Date(to) : undefined,
   }
 
-  const data = await listAuditLogs({
+  const fallbackData = {
+    total: 0,
     page,
     pageSize: 20,
-    adminId: filters.adminId,
-    actionType: filters.actionType,
-    from: filters.from,
-    to: filters.to,
-  })
+    items: [],
+  }
+  const data = await withDbFallback(
+    () =>
+      listAuditLogs({
+        page,
+        pageSize: 20,
+        adminId: filters.adminId,
+        actionType: filters.actionType,
+        from: filters.from,
+        to: filters.to,
+      }),
+    fallbackData,
+    'admin-audit-logs'
+  )
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize))
 

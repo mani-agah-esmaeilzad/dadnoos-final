@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3052 --turbopack",
-    "build": "next build --turbopack",
+    "build": "node scripts/ensure-next-lock.js && next build --webpack",
     "start": "next start -p 3052",
     "lint": "biome check",
     "format": "biome format --write",

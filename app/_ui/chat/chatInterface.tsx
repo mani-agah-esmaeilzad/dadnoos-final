@@ -16,6 +16,11 @@ import { ArrowDown } from 'lucide-react'
 import { useSavedMessagesStore } from '@/app/_lib/hooks/useSavedMessages'
 import { SavedMessagesManager } from '@/app/_ui/chat/savedMessagesManager'
 import { SaveMessageDialog } from '@/app/_ui/chat/saveMessageDialog'
+import { useVoiceSettings } from '@/app/_lib/hooks/useVoiceSettings'
+import { apiService } from '@/app/_lib/services/api'
+import { VoiceSettingsPanel } from '@/app/_ui/chat/voiceSettingsPanel'
+import { useVoiceLive } from '@/app/_lib/hooks/useVoiceLive'
+import { Button } from '@/app/_ui/components/button'
 
 const defaultSuggestions = [
   'چگونه می‌توان ادعای خسارت ناشی از قرارداد را مطرح کرد؟',
@@ -44,7 +49,7 @@ interface ChatInterfaceProps {
   collapsed: boolean
   inputValue: string
   onInputChange: (value: string) => void
-  onSendMessage: () => void
+  onSendMessage: (message?: string) => void | Promise<void>
   onKeyPress: (e: React.KeyboardEvent) => void
   suggestions: string[]
   messages: MessageType[]
@@ -105,6 +110,7 @@ export default function ChatInterface({
   const [messageToSave, setMessageToSave] = useState<MessageType | null>(null)
   const [defaultSaveTitle, setDefaultSaveTitle] = useState('')
   const [defaultCaseId, setDefaultCaseId] = useState<string | undefined>(undefined)
+  const [isVoicePanelOpen, setIsVoicePanelOpen] = useState(false)
 
   const hasQueuedPrompts = queuedPrompts.length > 0
 
@@ -112,6 +118,24 @@ export default function ChatInterface({
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const promptContainerRef = useRef<HTMLDivElement>(null)
   const addSavedFile = useSavedMessagesStore((state) => state.addFile)
+  const spokenMessageRef = useRef<string | null>(null)
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  const {
+    voiceEnabled,
+    autoSendVoice,
+    autoPlayResponses,
+    voiceLiveEnabled,
+  } = useVoiceSettings()
+  const {
+    start: startVoiceLive,
+    stop: stopVoiceLive,
+    status: voiceLiveStatus,
+    error: voiceLiveError,
+    isLive: isVoiceLiveRunning,
+    transcripts: voiceLiveTranscripts,
+    responses: voiceLiveResponses,
+  } = useVoiceLive(autoPlayResponses)
 
   useEffect(() => {
     const container = chatContainerRef.current
@@ -159,6 +183,68 @@ export default function ChatInterface({
       block: 'start',
     })
   }, [messages, promptHeight])
+
+  useEffect(() => {
+    return () => {
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.pause()
+        ttsAudioRef.current.src = ''
+        ttsAudioRef.current = null
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!voiceLiveEnabled && voiceLiveStatus === 'live') {
+      stopVoiceLive()
+    }
+    if (!voiceEnabled && voiceLiveStatus !== 'idle') {
+      stopVoiceLive()
+    }
+  }, [voiceLiveEnabled, voiceEnabled, voiceLiveStatus, stopVoiceLive])
+
+  useEffect(() => {
+    if (!voiceEnabled || !autoPlayResponses) return
+    if (!messages.length) return
+
+    const latest = messages[messages.length - 1]
+    if (!latest || latest.isUser || latest.isHistory) return
+    if (!latest.text?.trim()) return
+    if (spokenMessageRef.current === latest.id) return
+
+    let cancelled = false
+    spokenMessageRef.current = latest.id
+
+    const synthesize = async () => {
+      try {
+        const blob = await apiService.textToSpeech(latest.text)
+        if (cancelled) return
+        const url = URL.createObjectURL(blob)
+        if (ttsAudioRef.current) {
+          ttsAudioRef.current.pause()
+          ttsAudioRef.current.src = ''
+        }
+        const audio = new Audio(url)
+        ttsAudioRef.current = audio
+        const cleanup = () => {
+          URL.revokeObjectURL(url)
+        }
+        audio.addEventListener('ended', cleanup, { once: true })
+        audio.addEventListener('error', cleanup, { once: true })
+        audio.play().catch((error) => {
+          console.error('Auto speech playback failed:', error)
+        })
+      } catch (error) {
+        console.error('Auto speech synthesis failed:', error)
+      }
+    }
+
+    synthesize()
+
+    return () => {
+      cancelled = true
+    }
+  }, [messages, voiceEnabled, autoPlayResponses])
 
   // Handle zoom (wheel + pinch)
   useEffect(() => {
@@ -354,6 +440,111 @@ export default function ChatInterface({
               )}
             </AnimatePresence>
 
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-2 text-[11px] md:text-xs">
+              <div
+                className={cn(
+                  "px-3 py-1 rounded-2xl border text-neutral-600 dark:text-neutral-200",
+                  voiceEnabled
+                    ? "border-emerald-400/70 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                    : "border-neutral-200 dark:border-neutral-700"
+                )}
+              >
+                {voiceEnabled ? 'حالت صوتی فعال است' : 'حالت صوتی غیرفعال است'}
+                {voiceEnabled && (
+                  <span className="ml-2 text-[10px] text-neutral-500 dark:text-neutral-400">
+                    {[
+                      autoSendVoice ? 'ارسال خودکار' : null,
+                      autoPlayResponses ? 'پخش پاسخ' : null,
+                      voiceLiveEnabled ? 'Voice Live' : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="px-3 py-1 rounded-2xl border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:border-neutral-500 dark:hover:border-neutral-500 transition-colors"
+                onClick={() => setIsVoicePanelOpen(true)}
+              >
+                تنظیمات صوتی
+              </button>
+            </div>
+
+            {voiceEnabled && voiceLiveEnabled && (
+              <div className="mx-1 mb-3 rounded-3xl border border-neutral-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/40 p-3 flex flex-col gap-2 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">Voice Live</span>
+                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                      {voiceLiveStatus === 'live'
+                        ? 'در حال مکالمه زنده'
+                        : voiceLiveStatus === 'connecting'
+                          ? 'در حال اتصال...'
+                          : 'آماده شروع مکالمه'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {voiceLiveStatus === 'idle' && (
+                      <Button
+                        size="sm"
+                        onClick={startVoiceLive}
+                        className="rounded-2xl"
+                      >
+                        شروع
+                      </Button>
+                    )}
+                    {voiceLiveStatus === 'connecting' && (
+                      <Button size="sm" variant="outline" disabled className="rounded-2xl">
+                        اتصال...
+                      </Button>
+                    )}
+                    {voiceLiveStatus === 'live' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={stopVoiceLive}
+                          className="rounded-2xl border-red-400 text-red-600"
+                        >
+                          پایان
+                        </Button>
+                      </>
+                    )}
+                    {voiceLiveStatus === 'error' && (
+                      <Button size="sm" variant="outline" onClick={startVoiceLive} className="rounded-2xl">
+                        تلاش مجدد
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {voiceLiveError && (
+                  <p className="text-[11px] text-red-500">{voiceLiveError}</p>
+                )}
+                {isVoiceLiveRunning && (
+                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    هر چند ثانیه یک‌بار صدا به سرور ارسال می‌شود. برای پایان مکالمه دکمه «پایان» را بزن.
+                  </p>
+                )}
+                {voiceLiveTranscripts.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400">آخرین گفتار شما:</p>
+                    <p className="rounded-2xl bg-neutral-100 dark:bg-neutral-800 p-2 text-[12px]">
+                      {voiceLiveTranscripts[voiceLiveTranscripts.length - 1]}
+                    </p>
+                  </div>
+                )}
+                {voiceLiveResponses.length > 0 && (
+                  <div className="mt-1 space-y-1">
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400">آخرین پاسخ مدل:</p>
+                    <div className="rounded-2xl bg-black/80 text-white dark:bg-white/20 dark:text-white p-2 text-[12px]">
+                      {voiceLiveResponses[voiceLiveResponses.length - 1]?.text}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <ChatInput
               // key={conversationId || 'new-chat'}
               inputValue={inputValue}
@@ -367,6 +558,12 @@ export default function ChatInterface({
               onInputChange={onInputChange}
               onSendMessage={onSendMessage}
               setIsUploadPanelOpen={setIsUploadPanelOpen}
+              voiceEnabled={voiceEnabled}
+              autoSendVoice={autoSendVoice}
+            />
+            <VoiceSettingsPanel
+              isOpen={isVoicePanelOpen}
+              onClose={() => setIsVoicePanelOpen(false)}
             />
 
             <UploadPanel

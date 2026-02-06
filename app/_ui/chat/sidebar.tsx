@@ -61,7 +61,7 @@ export default function Sidebar({
   const { deleteConversation } = useChat();
 
   const fetchConversations = useCallback(async () => {
-    if (!user.id) return;
+    if (!user.id || !apiService.token) return;
     try {
       const conversations = await apiService.getConversations(user.id)
       setRecentChats(conversations)

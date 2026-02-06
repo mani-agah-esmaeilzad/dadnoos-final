@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { requireAuth } from '@/lib/auth/guards'
 import { env } from '@/lib/env'
 import { ensurePlanCatalog } from '@/lib/billing/defaultPlan'
+import { getPlanMessageLimit } from '@/lib/billing/messageQuota'
 
 const bodySchema = z.object({
   plan_id: z.string().min(1),
@@ -18,6 +19,7 @@ const isVercelBuild = process.env.VERCEL === '1' && process.env.NEXT_PHASE === '
 export async function POST(req: NextRequest) {
   try {
     if (isVercelBuild) {
+      const placeholderMessageQuota = getPlanMessageLimit(env.DEFAULT_PLAN_CODE)
       return NextResponse.json({
         id: 'build-placeholder',
         plan_id: env.DEFAULT_PLAN_CODE,
@@ -26,6 +28,9 @@ export async function POST(req: NextRequest) {
         token_quota: env.DEFAULT_PLAN_TOKEN_QUOTA,
         tokens_used: 0,
         remaining_tokens: env.DEFAULT_PLAN_TOKEN_QUOTA,
+        message_quota: placeholderMessageQuota,
+        messages_used: 0,
+        remaining_messages: placeholderMessageQuota,
         started_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + env.DEFAULT_PLAN_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
         active: true,
@@ -147,6 +152,8 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    const messageQuota = getPlanMessageLimit(subscription.plan?.code)
+
     const responsePayload = {
       id: subscription.id,
       plan_id: subscription.planId,
@@ -155,6 +162,9 @@ export async function POST(req: NextRequest) {
       token_quota: subscription.tokenQuota,
       tokens_used: subscription.tokensUsed,
       remaining_tokens: subscription.tokenQuota - subscription.tokensUsed,
+      message_quota: messageQuota,
+      messages_used: 0,
+      remaining_messages: messageQuota,
       started_at: subscription.startedAt.toISOString(),
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,

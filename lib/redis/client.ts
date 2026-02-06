@@ -109,8 +109,8 @@ export const redis =
     ? createMemoryRedis()
     : new Redis(env.REDIS_URL, {
         maxRetriesPerRequest: 1,
-        lazyConnect: true,
-        enableOfflineQueue: false,
+        lazyConnect: false,
+        enableOfflineQueue: true,
       }))
 
 if (!shouldUseMemoryRedis && redis instanceof Redis) {

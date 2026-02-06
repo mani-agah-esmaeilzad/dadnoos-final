@@ -2,11 +2,12 @@ import { listBlogPosts } from '@/lib/admin/blogs'
 import BlogManager from '@/app/admin/_components/blog-manager'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
+import { withDbFallback } from '@/lib/db/fallback'
 
 const PAGE_SIZE = 10
 
 interface PageProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function getParam(value?: string | string[]) {
@@ -28,18 +29,30 @@ export const metadata = {
 }
 
 export default async function AdminBlogsPage({ searchParams }: PageProps) {
-  const pageParam = Number(getParam(searchParams?.page) ?? '1')
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const pageParam = Number(getParam(resolvedSearchParams.page) ?? '1')
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
-  const query = getParam(searchParams?.query) ?? ''
-  const status = parseStatus(searchParams?.status)
+  const query = getParam(resolvedSearchParams.query) ?? ''
+  const status = parseStatus(resolvedSearchParams.status)
   const publishedFilter = status === 'published' ? true : status === 'draft' ? false : undefined
 
-  const pageData = await listBlogPosts({
+  const fallbackData = {
+    total: 0,
     page,
     pageSize: PAGE_SIZE,
-    query: query || undefined,
-    published: publishedFilter,
-  })
+    items: [],
+  }
+  const pageData = await withDbFallback(
+    () =>
+      listBlogPosts({
+        page,
+        pageSize: PAGE_SIZE,
+        query: query || undefined,
+        published: publishedFilter,
+      }),
+    fallbackData,
+    'admin-blogs'
+  )
 
   const serializablePosts = pageData.items.map((post) => ({
     ...post,

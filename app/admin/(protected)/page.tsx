@@ -2,9 +2,10 @@ import DashboardCharts from '@/app/admin/_components/dashboard-charts'
 import { KpiCard } from '@/app/admin/_components/kpi-card'
 import { Button } from '@/app/_ui/components/button'
 import { getDashboardOverview } from '@/lib/admin/dashboard'
+import { withDbFallback } from '@/lib/db/fallback'
 
 interface DashboardProps {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function parseRange(value?: string | string[]) {
@@ -21,9 +22,43 @@ export const metadata = {
 }
 
 export default async function AdminDashboardPage({ searchParams }: DashboardProps) {
-  const range = parseRange(searchParams?.range)
-  const overview = await getDashboardOverview({ range })
-  const last30Label = formatNumber(overview.metrics.tokens.last30Days)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const range = parseRange(resolvedSearchParams.range)
+  const effectiveRange: '7d' | '30d' = range ?? '7d'
+  const nowIso = new Date().toISOString()
+  const fallbackOverview: Awaited<ReturnType<typeof getDashboardOverview>> = {
+    range: {
+      label: effectiveRange,
+      start: nowIso,
+      end: nowIso,
+    },
+    metrics: {
+      users: 0,
+      conversations: 0,
+      messages: 0,
+      messagesUsage: {
+        rangeTotal: 0,
+        last30Days: 0,
+      },
+      tokens: {
+        rangeTotal: 0,
+        last30Days: 0,
+      },
+    },
+    charts: {
+      tokensPerDay: [],
+      messagesPerDay: [],
+      topUsers: [],
+      moduleDistribution: [],
+    },
+  }
+  const overview = await withDbFallback(
+    () => getDashboardOverview({ range: effectiveRange }),
+    fallbackOverview,
+    'admin-dashboard-overview'
+  )
+  const rangeLabelText = overview.range.label === '7d' ? '۷ روز' : '۳۰ روز'
+  const messagesLast30Label = formatNumber(overview.metrics.messagesUsage.last30Days)
 
   return (
     <section className="space-y-8">
@@ -56,14 +91,13 @@ export default async function AdminDashboardPage({ searchParams }: DashboardProp
         <KpiCard label="تعداد گفتگوها" value={overview.metrics.conversations} description="مجموع جلسات ایجاد شده" />
         <KpiCard label="پیام‌های مبادله‌شده" value={overview.metrics.messages} description="کل پیام‌ها" />
         <KpiCard
-          label={`مصرف توکن (${overview.range.label === '7d' ? '۷ روز' : '۳۰ روز'})`}
-          value={overview.metrics.tokens.rangeTotal}
-          description={`۳۰ روز اخیر: ${last30Label}`}
+          label={`پیام‌های ارسال‌شده (${rangeLabelText})`}
+          value={overview.metrics.messagesUsage.rangeTotal}
+          description={`۳۰ روز اخیر: ${messagesLast30Label}`}
         />
       </div>
 
       <DashboardCharts
-        tokensPerDay={overview.charts.tokensPerDay}
         messagesPerDay={overview.charts.messagesPerDay}
         topUsers={overview.charts.topUsers}
         moduleDistribution={overview.charts.moduleDistribution}

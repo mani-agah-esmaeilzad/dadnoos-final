@@ -112,7 +112,7 @@ export function useChat() {
   }
 
   const loadConversation = async (chatId: string) => {
-    if (!user.id) return
+    if (!user.id || !apiService.token) return
     try {
       setIsThinking(true)
       const history = await apiService.getMessagesByConversation(user.id, chatId)
@@ -134,7 +134,7 @@ export function useChat() {
   }
 
   const deleteConversation = async (chatId: string) => {
-    if (!user.id) return
+    if (!user.id || !apiService.token) return
     try {
       await apiService.deleteConversation(user.id, chatId)
       if (conversationId === chatId) {
