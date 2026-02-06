@@ -36,8 +36,8 @@ const formatDate = (value?: string | null) => {
   }
 }
 
-export default function PaymentPage({ params }: { params: { tab: TabKey, plan: PlanKey } }) {
-  const { tab, plan } = params
+export default function PaymentPage({ params }: { params: Promise<{ tab: TabKey; plan: PlanKey }> }) {
+  const { tab, plan } = React.use(params)
   const router = useRouter()
 
   const [loading, setLoading] = useState(true)
