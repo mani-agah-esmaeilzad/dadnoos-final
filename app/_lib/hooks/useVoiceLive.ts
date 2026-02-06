@@ -100,13 +100,14 @@ export function useVoiceLive(autoPlayResponses: boolean = true) {
           if (transcriptValue) {
             setTranscripts((prev) => [...prev, transcriptValue])
           }
-          const responseText = typeof result?.response?.text === 'string' ? result.response.text.trim() : ''
+          const response = result?.response
+          const responseText = typeof response?.text === 'string' ? response.text.trim() : ''
           if (responseText) {
             let audioUrl: string | undefined
-            if (typeof result.response?.audio_base64 === 'string' && result.response.audio_base64) {
+            if (typeof response?.audio_base64 === 'string' && response.audio_base64) {
               const blob = base64ToBlob(
-                result.response.audio_base64,
-                result.response.mime_type || 'audio/mpeg'
+                response.audio_base64,
+                response.mime_type || 'audio/mpeg'
               )
               audioUrl = URL.createObjectURL(blob)
               audioUrlsRef.current.push(audioUrl)
