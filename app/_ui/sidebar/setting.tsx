@@ -12,13 +12,17 @@ import Image from "next/image"
 
 interface SettingProps {
   user: any
-  isScrolledEnd: any
+  isMobile: boolean
+  collapsed: boolean
+  isScrolledEnd: boolean
   onClickLogout: any
   toggleContactModal: any
 }
 
 export default function Setting({
   user,
+  isMobile,
+  collapsed,
   isScrolledEnd,
   onClickLogout,
   toggleContactModal,
@@ -66,6 +70,7 @@ export default function Setting({
         variant="ghost"
         className={cn(
           "items-center justify-between px-0  pb-9 pt-7 rounded-none mb-safe border-t gap-0",
+          !isMobile && collapsed ? "opacity-0" : "opacity-100 sm:delay-400 transition-opacity",
           !isScrolledEnd ? "border-neutral-400/15" : "border-transparent"
         )}
       >
@@ -81,7 +86,7 @@ export default function Setting({
             className="size-8 object-cover object-center rounded-full overflow-hidden dark:opacity-65"
           />
           <span className="text-sm font-medium">
-            {toPersianNumber(user?.mobile) || "حساب کاربری"}
+            {user?.mobile ? toPersianNumber(user?.mobile) : "حساب کاربری"}
           </span>
         </div>
 

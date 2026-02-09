@@ -54,13 +54,22 @@ export default function Introduction({
       description:
         "برای استفاده کامل از امکانات دادنوس، حساب کاربری خود را به سادگی ایجاد کرده و با کد یکبار مصرف وارد شوید.",
       action: (
-        <Link
-          href="/auth"
-          onClick={onClose}
-          className="px-5 py-2.5 rounded-full border border-black/20 dark:border-white/75 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent active:bg-[#f2f2f2] dark:active:bg-[#f2f2f2]/25 active:border-transparent transition-colors font-medium"
-        >
-          ورود به دادنوس
-        </Link>
+        <div className="grid items-center justify-center gap-4">
+          <Link
+            href="/auth"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-full border border-black/20 dark:border-white/75 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent active:bg-[#f2f2f2] dark:active:bg-[#f2f2f2]/25 active:border-transparent transition-colors font-medium"
+          >
+            ورود به دادنوس
+          </Link>
+          <Link
+            href="/"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-full hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent active:bg-[#f2f2f2] dark:active:bg-[#f2f2f2]/25 active:border-transparent transition-colors font-medium"
+          >
+            بازگشت به صفحه اصلی
+          </Link>
+        </div>
       ),
       logo: logo,
     },
@@ -100,7 +109,7 @@ export default function Introduction({
             stiffness: 260,
             damping: 30
           }}
-          className="fixed inset-0 z-50 bg-white dark:bg-neutral-800 flex flex-col"
+          className="fixed inset-0 z-[10000] bg-white dark:bg-neutral-800 flex flex-col"
         >
           <div
             className="flex-1 flex items-center justify-center overflow-x-hidden overflow-y-hidden"

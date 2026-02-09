@@ -66,7 +66,7 @@ export default function PhoneInput({
                 autoComplete="mobile"
                 className="
                     peer block w-full rounded-2xl px-4 py-2.5 bg-transparent
-                    border border-neutral-500 dark:border-neutral-300
+                    border border-neutral-400
                     focus:outline-none focus:border-[#9b956d] dark:focus:border-[#9b956d]
                     sm:text-sm sm:leading-6
                 "

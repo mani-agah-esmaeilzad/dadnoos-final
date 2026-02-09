@@ -14,9 +14,8 @@ const isPWAInstalled = () =>
 
 export default function RootLayout({ children }: RootLayoutProps) {
   const [showSplash, setShowSplash] = useState(true)
-  const [showInstall, setShowInstall] = useState(false)
-
   const [checkedPWA, setCheckedPWA] = useState(false)
+  const [showInstall, setShowInstall] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
   useEffect(() => {
@@ -34,10 +33,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
   }, [])
 
   useEffect(() => {
-    if (isPWAInstalled()) return
-
+    const installed = isPWAInstalled()
     const skipped = localStorage.getItem('installSkipped')
-    if (skipped) return
+
+    if (!installed && !skipped) {
+      setShowInstall(true)
+    }
 
     const handler = (e: any) => {
       e.preventDefault()
@@ -52,20 +53,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
     }
   }, [])
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) return
-
-    deferredPrompt.prompt()
-    const result = await deferredPrompt.userChoice
-
-    setDeferredPrompt(null)
-    setShowInstall(false)
-
-    if (result.outcome === 'dismissed') {
-      localStorage.setItem('installSkipped', 'true')
-    }
-  }
-
   const handleSkipInstall = () => {
     localStorage.setItem('installSkipped', 'true')
     setShowInstall(false)
@@ -77,13 +64,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <SplashScreen onFinish={() => setShowSplash(false)} />
   ) : (
     <>
-      {!isPWAInstalled() && (
-        <InstallPopup
-          visible={showInstall}
-          onInstall={handleInstall}
-          onSkip={handleSkipInstall}
-        />
-      )}
+      <InstallPopup
+        visible={showInstall}
+        onSkip={handleSkipInstall}
+      />
 
       {children}
     </>

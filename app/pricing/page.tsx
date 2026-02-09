@@ -59,11 +59,13 @@ export default function Pricing() {
               />
             </Link>
           </div>
+
+          <div className="absolute inset-x-0 bg-gradient-to-b from-background -bottom-5 h-5 w-full" />
         </div>
 
         {/* Sticky Tabs */}
-        <div className="sticky top-safe top-0 md:top-20 z-30 w-full max-w-md mb-safe-40 mb-6 md:mb-32 md:mt-4">
-          <div className="flex gap-1 p-1 rounded-full bg-neutral-400/25 backdrop-blur-md">
+        <div className="sticky -top-safe-10 top-0 md:top-20 z-30 w-full max-w-md mb-safe-30 mb-4 md:mb-32 md:mt-4">
+          <div className="flex gap-1 p-1 rounded-full bg-neutral-300/75 backdrop-blur-md">
             {TABS.map(tab => (
               <button
                 key={tab.key}
@@ -81,11 +83,11 @@ export default function Pricing() {
           </div>
         </div>
 
-        {/* Illustration only desktop */}
+        {/* Illustration */}
         <Image
           width={1000}
           height={500}
-          className="hidden md:absolute object-cover w-full aspect-[5/4] max-w-xl h-auto mb-8 mt-0 md:mt-24"
+          className="absolute object-cover w-full aspect-[5/3] max-w-xl h-auto mb-8 mt-44"
           src={sectionImage}
           priority
           alt=""
@@ -96,17 +98,17 @@ export default function Pricing() {
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0, backdropFilter: "blur(24px)" }}
             exit={{ opacity: 0, y: -40 }}
             transition={{ duration: .3, ease: "easeOut" }}
-            className="w-full max-w-6xl mb-20 md:mt-10"
+            className="w-full max-w-7xl mb-20 md:mt-10"
           >
             {/* Desktop Grid */}
-            <div className="hidden sm:grid grid-cols-4 gap-2 lg:gap-5 w-full transition-all">
+            <div className="hidden sm:grid grid-cols-4 gap-2 lg:gap-10 w-full transition-all">
               {PLANS[activeTab].map(plan => (
                 <div
                   key={plan.key}
-                  className="relative bg-neutral-700/10 dark:bg-neutral-700/50 backdrop-blur-2xl rounded-2xl p-6 flex flex-col justify-between shadow-lg"
+                  className="relative bg-neutral-700/10 dark:bg-neutral-700/50 rounded-2xl p-6 flex flex-col justify-between shadow-lg"
                 >
                   {plan.discount && (
                     <span className="absolute -top-3 right-3 bg-emerald-600 text-white text-xs px-3 py-1 rounded-full shadow">

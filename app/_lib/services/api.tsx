@@ -242,10 +242,12 @@ class ApiService {
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
+    const body = JSON.stringify(request ?? {})
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(request),
+      body,
     })
 
     if (!response.ok) {

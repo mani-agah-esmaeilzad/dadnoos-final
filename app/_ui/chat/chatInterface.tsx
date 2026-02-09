@@ -392,7 +392,7 @@ export default function ChatInterface({
                   ref={promptContainerRef}
                   className={cn(
                     // isMobile ? 'no-scrollbar' : 'scrollbar scrollbar-chat',
-                    "absolute z-10 flex overflow-x-auto items-start justify-start gap-3 pb-4 lg:px-10 lg:pb-4 sm:mb-3",
+                    "absolute z-10 flex overflow-x-auto items-start justify-start gap-x-3 pb-4 lg:px-10 lg:pb-4 sm:mb-3",
                     'no-scrollbar'
                   )}
                   style={{ top: `-${promptHeight + 4}px` }}
@@ -416,7 +416,7 @@ export default function ChatInterface({
                         onSuggestionClick(prompt.prompt)
                         queuedPrompts.forEach(p => onRemoveQueuedPrompt(p.id))
                       }}
-                      className="group shrink-0 max-w-3/5 md:max-w-1/2 cursor-pointer rounded-3xl bg-neutral-100 dark:bg-[#2a2a2a]/80 py-3 px-4 backdrop-blur-md transition-all md:hover:bg-[#9b956d]/25 active:bg-[#9b956d]/25"
+                      className="group shrink-0 max-w-64 md:max-w-1/2 cursor-pointer rounded-3xl bg-neutral-100 dark:bg-[#2a2a2a]/80 py-3 px-4 backdrop-blur-md transition-all md:hover:bg-[#9b956d]/25 active:bg-[#9b956d]/25"
                       dir="rtl"
                     >
                       <div className="flex items-start gap-5">
@@ -487,6 +487,7 @@ export default function ChatInterface({
               isOpen={isFileManagerOpen}
               onClose={onCloseFileManager}
             />
+
             <SaveMessageDialog
               isOpen={isSaveDialogOpen}
               defaultTitle={defaultSaveTitle}
@@ -515,7 +516,6 @@ export default function ChatInterface({
         </div>
 
         <AnimatePresence>
-
           {(isMobile && !collapsed) || showScrollButton &&
             <motion.div
               key="scroll-to-bottom-wrapper"

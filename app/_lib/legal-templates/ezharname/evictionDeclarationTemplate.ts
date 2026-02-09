@@ -5,9 +5,6 @@ export const evictionDeclarationTemplate: LegalTemplate = {
   title: 'اظهارنامه تخلیه ملک',
   description: 'برای اعلام رسمی تخلیه ملک به مستاجر',
   fields: [
-    { name: 'landlordName', label: 'نام مالک', placeholder: 'مثلا: علی رضایی', type: 'text', validation: z.string().min(3, 'نام مالک را وارد کنید') },
-    { name: 'tenantName', label: 'نام مستاجر', placeholder: 'مثلا: محمد حسینی', type: 'text', validation: z.string().min(3, 'نام مستاجر را وارد کنید') },
-    { name: 'propertyAddress', label: 'آدرس ملک', placeholder: 'مثلا: تهران، خیابان ولیعصر، پلاک ۱۲۳', type: 'textarea', validation: z.string().min(10, 'آدرس را وارد کنید') },
     { name: 'reason', label: 'دلیل تخلیه', placeholder: 'مثلا: پایان قرارداد، عدم پرداخت اجاره', type: 'textarea', validation: z.string().min(10, 'دلیل تخلیه را وارد کنید') },
     { name: 'deadline', label: 'مهلت تخلیه', placeholder: 'مثلا: تا تاریخ ۱۴۰۵/۰۳/۰۱', type: 'text', validation: z.string().min(3, 'مهلت تخلیه را وارد کنید') },
     { name: 'additionalNotes', label: 'یادداشت‌های تکمیلی', placeholder: 'سایر توضیحات', type: 'textarea', validation: z.string().optional() },

@@ -95,6 +95,13 @@ interface SidebarProps {
   onOpenFileManager: () => void
 }
 
+const verdictPredictionSuggestions = [
+  'با توجه به رویه قضایی، احتمال صدور رأی به نفع خواهان در دعوای مطالبه وجه چقدر است؟',
+  'احتمال موفقیت دعوای تخلیه ملک به استناد انقضای مدت اجاره چقدر است؟',
+  'در پرونده کیفری کلاهبرداری، با این شرایط چه رأیی محتمل‌تر است؟',
+  'اگر خوانده دفاعیات مشخصی ارائه دهد، تأثیر آن بر رأی دادگاه چیست؟',
+]
+
 const advisorySuggestions = [
   'نظریات مشورتی قوه قضاییه در مورد امور کیفری چگونه دسته‌بندی می‌شوند؟',
   'آخرین نظریات مشورتی در زمینه حقوق خانواده چیست؟',
@@ -225,7 +232,7 @@ export default function SidebarContent({
         className={cn(
           collapsed ? "overflow-hidden" : "overflow-y-auto sidebar-scroll scrollbar",
           !isMobile && collapsed ? "opacity-0" : "opacity-100 sm:delay-400 transition-opacity",
-          "relative flex-1 overflow-x-hidden overscroll-none select-none pl-0.5"
+          "relative flex-1 overflow-x-hidden select-none pl-0.5"
         )}
       >
         <div className="grid px-2 md:px-1">
@@ -351,7 +358,7 @@ export default function SidebarContent({
 
           <div className="pt-4">
             <div className="mr-2 flex items-center gap-3 pb-2">
-              <h3 className="text-neutral-500">تنظیم سند</h3>
+              <h3 className="text-neutral-500 dark:text-neutral-400">تنظیم سند</h3>
             </div>
 
             <AnimatePresence initial={false}>
@@ -452,28 +459,12 @@ export default function SidebarContent({
                 className="w-full justify-start px-3 h-auto"
                 onClick={() => {
                   if (isMobile) onToggle()
-                  onStartChatWithPrompt(barExamSuggestions.map(p => ({ prompt: p, title: "پیش بینی رای" })))
+                  onStartChatWithPrompt(verdictPredictionSuggestions.map(p => ({ prompt: p, title: "پیش بینی رای" })))
                 }}
               >
                 <div className="flex items-center gap-3">
                   <UserRoundPen className="size-6" />
                   <h3>پیش بینی رای</h3>
-                </div>
-              </Button>
-            </div>
-
-            <div>
-              <Button
-                variant="ghost"
-                className="w-full justify-start px-3 h-auto"
-                onClick={() => {
-                  if (isMobile) onToggle()
-                  onStartChatWithPrompt(advisorySuggestions.map(p => ({ prompt: p, title: "بانک نظریات مشورتی" })))
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <UsersRound className="size-6" />
-                  <h3>بانک نظریات مشورتی</h3>
                 </div>
               </Button>
             </div>
@@ -490,6 +481,22 @@ export default function SidebarContent({
                 <div className="flex items-center gap-3">
                   <LibraryBig className="size-6" />
                   <h3>بانک آرای وحدت رویه</h3>
+                </div>
+              </Button>
+            </div>
+
+            <div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start px-3 h-auto"
+                onClick={() => {
+                  if (isMobile) onToggle()
+                  onStartChatWithPrompt(advisorySuggestions.map(p => ({ prompt: p, title: "بانک نظریات مشورتی" })))
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <UsersRound className="size-6" />
+                  <h3>بانک نظریات مشورتی</h3>
                 </div>
               </Button>
             </div>
@@ -542,6 +549,8 @@ export default function SidebarContent({
 
       <Setting
         user={user}
+        isMobile={isMobile}
+        collapsed={collapsed}
         isScrolledEnd={isScrolledEnd}
         onClickLogout={onClickLogout}
         toggleContactModal={toggleContactModal}

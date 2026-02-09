@@ -34,15 +34,10 @@ export function VoiceStatusBar({
     <div className="flex flex-col gap-2 w-full max-w-md mx-auto aspect-square">
       {/* Voice Live panel */}
       {voiceEnabled && voiceLiveEnabled && (
-        <div className="max-w-72 m-auto aspect-square rounded-full p-3 flex flex-col items-center justify-center gap-2 text-xs
-              relative overflow-hidden
-              before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-r before:from-purple-500 before:via-pink-500 before:to-yellow-500
-              before:animate-gradient-x before:z-0
-            "
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">گفتگوی زنده</span>
+        <div className="max-w-80 m-auto aspect-square rounded-full bg-neutral-200 dark:bg-neutral-700 p-3 flex flex-col items-center justify-center gap-2 text-xs">
+          <div className="flex flex-col items-center justify-center gap-5 p-10">
+            <div className="flex flex-col items-center justify-center">
+              <span className="text-sm font-semibold">Voice Live</span>
               <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 {voiceLiveStatus === "live"
                   ? "در حال مکالمه زنده"
@@ -83,20 +78,10 @@ export function VoiceStatusBar({
               )}
             </div>
           </div>
-
-          {voiceLiveError && (
-            <p className="text-[11px] text-red-500">{voiceLiveError}</p>
-          )}
-
-          {isVoiceLiveRunning && (
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-              هر چند ثانیه یک‌بار صدا به سرور ارسال می‌شود. برای پایان مکالمه دکمه «پایان» را بزن.
-            </p>
-          )}
         </div>
       )}
 
-      <div className="max-w-">
+      <div className="max-w-lg space-y-5">
         {transcripts.length > 0 && (
           <div className="mt-2 space-y-1">
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
@@ -117,6 +102,16 @@ export function VoiceStatusBar({
               {responses[responses.length - 1]?.text}
             </div>
           </div>
+        )}
+
+        {voiceLiveError && (
+          <p className="text-[11px] text-red-500 text-center">{voiceLiveError}</p>
+        )}
+
+        {isVoiceLiveRunning && (
+          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 text-center">
+            هر چند ثانیه یک‌بار صدا به سرور ارسال می‌شود. برای پایان مکالمه دکمه «پایان» را بزن.
+          </p>
         )}
       </div>
 

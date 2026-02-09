@@ -298,6 +298,10 @@ body {
 
 @media (display-mode: standalone) {
   @layer utilities {
+    .-top-safe-10 {
+      top: calc(env(safe-area-inset-top) - 10px);
+    }
+
     .top-safe {
       top: env(safe-area-inset-top);
     }
@@ -402,6 +406,14 @@ body {
 
     .mb-safe-20 {
       margin-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    }
+
+    .mt-safe-30 {
+      margin-top: calc(env(safe-area-inset-top) + 30px);
+    }
+
+    .mb-safe-30 {
+      margin-bottom: calc(env(safe-area-inset-bottom) + 30px);
     }
 
     .mt-safe-40 {

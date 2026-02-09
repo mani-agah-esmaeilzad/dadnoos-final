@@ -34,7 +34,7 @@ export default function AcceptButton({ message = "پذیرش", onAccept, disable
   return (
     <button
       onClick={handleClick}
-      className="w-sm h-10 from-[#b0ab7f] via-[#9b956d] to-[#b0ab7f] bg-gradient-to-tl hover:from-[#9b956d]/85 active:from-[#9b956d] hover:via-[#7f7960]/85 active:via-[#7f7960] transition-colors text-white text-sm font-semibold rounded-full flex items-center justify-center shadow-2xl gap-2 select-none disabled:opacity-60 cursor-pointer"
+      className="w-full h-10 from-[#b0ab7f] via-[#9b956d] to-[#b0ab7f] bg-gradient-to-tl hover:from-[#9b956d]/85 active:from-[#9b956d] hover:via-[#7f7960]/85 active:via-[#7f7960] transition-colors text-white text-sm font-semibold rounded-full flex items-center justify-center shadow-2xl gap-2 select-none disabled:opacity-60 cursor-pointer"
       disabled={disabled}
     >
       <AnimatePresence mode="wait">

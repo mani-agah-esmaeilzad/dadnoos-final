@@ -311,17 +311,17 @@ export default function ChatInput({
         {isVoiceFullscreen && voiceStatus && (
           <motion.div
             key="voice-fullscreen"
-            initial={{ scale: 0, borderRadius: "50rem", width: "10px", height: "10px" }}
+            initial={{ scale: 0, borderRadius: "50rem", width: "1%", height: "1%" }}
             animate={{ scale: 1, borderRadius: "0rem", width: "100%", height: "100%" }}
-            exit={{ scale: 0, borderRadius: "50rem", width: "10px", height: "10px" }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            exit={{ scale: 0, borderRadius: "50rem", width: "1", height: "1" }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
             className="fixed inset-0 z-50 bg-white/25 dark:bg-black/25 backdrop-blur-xl flex flex-col items-center justify-center p-4"
           >
             <Button
               size="icon_lg"
               variant="ghost"
               onClick={() => setIsVoiceFullscreen(false)}
-              className="absolute top-0 md:top-2 end-3 rounded-full mt-safe"
+              className="absolute top-0 md:top-2 end-2 rounded-full mt-safe"
             >
               <X className="size-6" />
             </Button>
@@ -330,7 +330,7 @@ export default function ChatInput({
               size="icon_lg"
               variant="ghost"
               onClick={onOpenVoiceSettings ?? (() => { })}
-              className="absolute top-0 md:top-2 start-3 rounded-full mt-safe"
+              className="absolute top-0 md:top-2 start-2 rounded-full mt-safe"
             >
               <Settings2 className="size-6" />
             </Button>
