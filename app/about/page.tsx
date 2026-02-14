@@ -24,7 +24,7 @@ export default async function AboutPage() {
       <AboutScrollManager />
 
       <div className="items-center justify-items-center" dir="auto">
-        <div className='fixed top-0 w-full '>
+        <div className='fixed top-1.5 w-full'>
           <Navbar />
         </div>
 

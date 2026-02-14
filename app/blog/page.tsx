@@ -19,7 +19,7 @@ export default async function BlogLandingPage() {
 
   return (
     <>
-      <div className='fixed top-0 w-full'>
+      <div className='fixed top-2 w-full'>
         <Navbar />
       </div>
 

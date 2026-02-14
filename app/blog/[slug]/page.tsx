@@ -74,7 +74,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <div dir='rtl'>
-      <div className='fixed top-0 w-full'>
+      <div className='fixed top-2 w-full'>
         <Navbar />
       </div>
 

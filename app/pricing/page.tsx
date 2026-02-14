@@ -60,21 +60,21 @@ export default function Pricing() {
             </Link>
           </div>
 
-          <div className="absolute inset-x-0 bg-gradient-to-b from-background -bottom-5 h-5 w-full" />
+          <div className="absolute inset-x-0 bg-gradient-to-b from-background -bottom-4 h-4 w-full" />
         </div>
 
         {/* Sticky Tabs */}
         <div className="sticky -top-safe-10 top-0 md:top-20 z-30 w-full max-w-md mb-safe-30 mb-4 md:mb-32 md:mt-4">
-          <div className="flex gap-1 p-1 rounded-full bg-neutral-300/75 backdrop-blur-md">
+          <div className="flex gap-1 p-1 rounded-full bg-neutral-200/85 dark:bg-neutral-400/25 backdrop-blur-md">
             {TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "flex-1 py-2 text-sm font-bold rounded-full transition",
+                  "flex-1 py-2.5 text-sm font-bold rounded-full transition",
                   activeTab === tab.key
                     ? "bg-[#9b956d] text-white"
-                    : "text-neutral-700 dark:text-neutral-400 lg:hover:bg-neutral-400/20 active:bg-neutral-400/20 cursor-pointer"
+                    : "text-neutral-500 dark:text-neutral-500 lg:hover:bg-neutral-400/20 active:bg-neutral-400/20 cursor-pointer"
                 )}
               >
                 {tab.label}
@@ -97,9 +97,9 @@ export default function Pricing() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0, backdropFilter: "blur(24px)" }}
-            exit={{ opacity: 0, y: -40 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: .3, ease: "easeOut" }}
             className="w-full max-w-7xl mb-20 md:mt-10"
           >
