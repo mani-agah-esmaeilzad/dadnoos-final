@@ -29,19 +29,19 @@ function UsageTable({
         <table className="w-full min-w-full divide-y divide-neutral-400/50 text-sm">
           <thead className="bg-neutral-50/60 text-neutral-500 dark:bg-neutral-900/40">
             <tr>
-              <th className="px-4 py-3 text-right font-medium">گروه</th>
-              <th className="px-4 py-3 text-right font-medium">توکن کل</th>
-              <th className="px-4 py-3 text-right font-medium">پرامپت</th>
-              <th className="px-4 py-3 text-right font-medium">پاسخ</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">گروه</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">توکن کل</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">پرامپت</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">پاسخ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100/60 dark:divide-neutral-800/80">
             {rows.map((row) => (
               <tr key={row.key} className="bg-white/60 dark:bg-neutral-900/30">
-                <td className="px-4 py-3 font-semibold text-neutral-800 dark:text-neutral-100">{row.key}</td>
-                <td className="px-4 py-3">{formatNumber(row.totalTokens)}</td>
-                <td className="px-4 py-3">{formatNumber(row.promptTokens)}</td>
-                <td className="px-4 py-3">{formatNumber(row.completionTokens)}</td>
+                <td className="px-4 py-3 font-semibold text-neutral-800 dark:text-neutral-100 whitespace-nowrap">{row.key}</td>
+                <td className="px-4 py-3 whitespace-nowrap">{formatNumber(row.totalTokens)}</td>
+                <td className="px-4 py-3 whitespace-nowrap">{formatNumber(row.promptTokens)}</td>
+                <td className="px-4 py-3 whitespace-nowrap">{formatNumber(row.completionTokens)}</td>
               </tr>
             ))}
             {!rows.length && (
@@ -126,10 +126,10 @@ export default async function AdminUsagePage({ searchParams }: UsagePageProps) {
           <table className="w-full divide-y divide-neutral-200/60 text-sm">
             <thead className="bg-neutral-50/60 text-neutral-500 dark:bg-neutral-900/40">
               <tr>
-                <th className="px-4 py-3 text-right font-medium">کاربر</th>
-                <th className="px-4 py-3 text-right font-medium">توکن کل</th>
-                <th className="px-4 py-3 text-right font-medium">پرامپت</th>
-                <th className="px-4 py-3 text-right font-medium">پاسخ</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">کاربر</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">توکن کل</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">پرامپت</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">پاسخ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100/60 dark:divide-neutral-800/80">

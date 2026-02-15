@@ -74,7 +74,7 @@ export default async function AdminDashboardPage({ searchParams }: DashboardProp
               id="range-select"
               name="range"
               defaultValue={overview.range.label}
-              className="rounded-2xl border appearance-none border-neutral-300/25 px-5 py-1.5 text-sm text-neutral-700 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-200"
+              className="rounded-2xl border appearance-none border-neutral-400/50 px-5 py-1.5 text-sm text-neutral-700 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-200"
             >
               <option value="7d">۷ روز گذشته</option>
               <option value="30d">۳۰ روز گذشته</option>

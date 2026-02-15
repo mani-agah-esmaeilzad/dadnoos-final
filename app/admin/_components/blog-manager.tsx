@@ -227,11 +227,11 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
           <table className="w-full min-w-[720px] divide-y divide-neutral-400/25 text-sm">
             <thead className="bg-neutral-50/80 text-neutral-500 dark:bg-neutral-900/50">
               <tr>
-                <th className="px-5 py-3 text-right font-medium">عنوان</th>
-                <th className="px-5 py-3 text-right font-medium">وضعیت</th>
-                <th className="px-5 py-3 text-right font-medium">آخرین بروزرسانی</th>
-                <th className="px-5 py-3 text-right font-medium">نویسنده</th>
-                <th className="px-5 py-3 text-right font-medium">اقدامات</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">عنوان</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">وضعیت</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">آخرین بروزرسانی</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">نویسنده</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">اقدامات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 bg-white/60 dark:divide-neutral-800 dark:bg-neutral-900/20">
@@ -244,23 +244,23 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${post.published
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${post.published
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200'
                         : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200'
                         }`}
                     >
                       {post.published ? 'منتشر شده' : 'پیش‌نویس'}
                     </span>
-                    <div className="mt-1 text-xs text-neutral-500">
+                    <div className="mt-1 text-xs text-neutral-500 whitespace-nowrap">
                       {post.published ? formatDate(post.publishedAt) : 'منتشر نشده'}
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-sm text-neutral-700 dark:text-neutral-200">{formatDate(post.updatedAt)}</td>
-                  <td className="px-5 py-4 text-sm text-neutral-600">
+                  <td className="px-5 py-4 text-sm text-neutral-700 dark:text-neutral-200 whitespace-nowrap">{formatDate(post.updatedAt)}</td>
+                  <td className="px-5 py-4 text-sm text-neutral-600 whitespace-nowrap">
                     {post.authorEmail ?? '—'}
                   </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <div className="grid gap-2">
                       <Button size="sm" variant="secondary" onClick={() => openEditForm(post)}>
                         ویرایش
                       </Button>

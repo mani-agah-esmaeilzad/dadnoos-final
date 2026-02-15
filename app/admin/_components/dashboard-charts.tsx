@@ -40,7 +40,7 @@ export default function DashboardCharts({ messagesPerDay, topUsers, moduleDistri
         <CardHeader>
           <CardTitle>روند پیام‌ها</CardTitle>
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="h-80 w-full">
           {messagesPerDay.length ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={messagesPerDay}>
@@ -60,7 +60,7 @@ export default function DashboardCharts({ messagesPerDay, topUsers, moduleDistri
         <CardHeader>
           <CardTitle>کاربران پرترافیک</CardTitle>
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="h-80 w-full">
           {topUsers.length ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topUsers}>
@@ -113,11 +113,11 @@ export default function DashboardCharts({ messagesPerDay, topUsers, moduleDistri
         <CardHeader>
           <CardTitle>۷ روز اخیر (تعداد پیام)</CardTitle>
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="min-h-80">
           {recentDays.length ? (
             <ul className="space-y-3 text-sm">
               {recentDays.map((day) => (
-                <li key={day.date} className="flex items-center justify-between rounded-2xl border border-neutral-200/70 px-3 py-2 dark:border-neutral-800/70">
+                <li key={day.date} className="flex items-center justify-between rounded-3xl border border-neutral-200/70 px-4 py-2 dark:border-neutral-800/70">
                   <span className="text-neutral-500">{day.date}</span>
                   <span className="font-semibold">{formatNumber(day.count)}</span>
                 </li>

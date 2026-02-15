@@ -81,7 +81,7 @@ export default async function AdminSupportPage({ searchParams }: SupportPageProp
             <select
               name="flag"
               defaultValue={flag}
-              className="mt-1 h-12 w-full appearance-none rounded-3xl border border-neutral-300/25 px-5 py-2 text-sm focus:outline-none"
+              className="mt-1 h-12 w-full appearance-none rounded-3xl border border-neutral-400/50 px-5 py-2 text-sm focus:outline-none"
             >
               <option value="any">مورد نیاز (پشتیبانی/گزارش)</option>
               <option value="support">فقط درخواست پشتیبانی</option>

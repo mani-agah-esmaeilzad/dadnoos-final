@@ -292,7 +292,7 @@ export function SavedMessagesManager({ isOpen, onClose }: SavedMessagesManagerPr
                                 event.target.value ? event.target.value : undefined,
                               )
                             }
-                            className="w-full rounded-2xl border border-neutral-200/70 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/50 px-3 py-1.5 text-xs focus:outline-none"
+                            className="w-full rounded-3xl appearance-none border border-neutral-200/70 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/50 px-5 py-2.5 text-xs focus:outline-none"
                           >
                             <option value="">بدون پرونده</option>
                             {sortedCases.map((caseItem) => (
