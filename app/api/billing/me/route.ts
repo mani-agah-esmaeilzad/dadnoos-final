@@ -31,11 +31,12 @@ export async function GET(req: NextRequest) {
       ? await prisma.subscriptionPlan.findUnique({ where: { id: subscription.planId } })
       : null
     const messageQuota = getPlanMessageLimit(plan?.code)
-    const messagesUsed = await prisma.message.count({
+    const messagesUsed = await prisma.trackingEvent.count({
       where: {
         userId: auth.sub,
-        role: 'user',
-        timestamp: {
+        eventType: 'chat_request',
+        source: 'api/v1/chat',
+        createdAt: {
           gte: subscription.startedAt,
           lte: subscription.expiresAt,
         },
