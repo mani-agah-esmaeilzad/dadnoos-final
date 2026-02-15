@@ -7,12 +7,12 @@ import { hasRequiredRole } from '@/lib/admin/rbac'
 
 export async function requireAdminPage(access: AdminRole[] = []) {
   const admin = await getAdminFromCookies()
-  // if (!admin) {
-  //   redirect('/admin/login')
-  // }
-  // if (access.length && !hasRequiredRole(admin.role, access)) {
-  //   redirect('/admin/login')
-  // }
+  if (!admin) {
+    redirect('/admin/login')
+  }
+  if (access.length && !hasRequiredRole(admin.role, access)) {
+    redirect('/admin/login')
+  }
   return admin
 }
 
