@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   try {
     const { getActiveSubscription } = await import('@/lib/billing/quota')
     const { getPlanMessageLimit } = await import('@/lib/billing/messageQuota')
+    const { calculateMessageBasedCredit } = await import('@/lib/billing/upgradeCredit')
     const { prisma } = await import('@/lib/db/prisma')
     const auth = requireAuth(req)
     const subscription = await getActiveSubscription(auth.sub)
@@ -42,6 +43,11 @@ export async function GET(req: NextRequest) {
         },
       },
     })
+    const upgradeCredit = calculateMessageBasedCredit({
+      planPriceCents: plan?.priceCents ?? 0,
+      messageQuota,
+      messagesUsed,
+    })
 
     const payload = {
       id: subscription.id,
@@ -54,6 +60,7 @@ export async function GET(req: NextRequest) {
       message_quota: messageQuota,
       messages_used: messagesUsed,
       remaining_messages: Math.max(messageQuota - messagesUsed, 0),
+      upgrade_credit_cents: upgradeCredit,
       started_at: subscription.startedAt.toISOString(),
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,

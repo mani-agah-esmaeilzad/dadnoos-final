@@ -1,4 +1,4 @@
-import { getUsageBreakdown, getTopUsageUsers } from '@/lib/admin/usage'
+import { getUsageBreakdown, getTopUsageUsers, getUserTokenUsageByMessage } from '@/lib/admin/usage'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
 import { withDbFallback } from '@/lib/db/fallback'
@@ -13,6 +13,10 @@ function parseParam(value?: string | string[]) {
 
 function formatNumber(value: number) {
   return value.toLocaleString('fa-IR')
+}
+
+function formatDecimal(value: number) {
+  return value.toLocaleString('fa-IR', { maximumFractionDigits: 1 })
 }
 
 function UsageTable({
@@ -68,7 +72,7 @@ export default async function AdminUsagePage({ searchParams }: UsagePageProps) {
   const fromDate = fromParam ? new Date(fromParam) : defaultFrom
   const toDate = toParam ? new Date(toParam) : now
 
-  const [daily, byModel, byModule, topUsers] = await Promise.all([
+  const [daily, byModel, byModule, topUsers, tokenByMessage] = await Promise.all([
     withDbFallback(
       () => getUsageBreakdown({ from: fromDate, to: toDate, groupBy: 'day' }),
       [],
@@ -88,6 +92,11 @@ export default async function AdminUsagePage({ searchParams }: UsagePageProps) {
       () => getTopUsageUsers({ from: fromDate, to: toDate, limit: 5 }),
       [],
       'admin-usage-top-users'
+    ),
+    withDbFallback(
+      () => getUserTokenUsageByMessage({ from: fromDate, to: toDate, limit: 10 }),
+      [],
+      'admin-usage-token-message'
     ),
   ])
 
@@ -142,6 +151,39 @@ export default async function AdminUsagePage({ searchParams }: UsagePageProps) {
                 </tr>
               ))}
               {!topUsers.length && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-4 text-center text-neutral-500">
+                    داده‌ای ثبت نشده است.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-3xl border border-neutral-200/60 p-6 shadow-sm dark:border-neutral-800">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">مصرف توکن بر اساس تعداد پیام</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full divide-y divide-neutral-200/60 text-sm">
+            <thead className="bg-neutral-50/60 text-neutral-500 dark:bg-neutral-900/40">
+              <tr>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">کاربر</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">تعداد پیام</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">توکن کل</th>
+                <th className="px-4 py-3 text-right font-medium whitespace-nowrap">میانگین توکن / پیام</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100/60 dark:divide-neutral-800/80">
+              {tokenByMessage.map((user) => (
+                <tr key={user.userId} className="bg-white/60 dark:bg-neutral-900/30">
+                  <td className="px-4 py-3 font-semibold text-neutral-800 dark:text-neutral-100">{user.username}</td>
+                  <td className="px-4 py-3">{formatNumber(user.totalMessages)}</td>
+                  <td className="px-4 py-3">{formatNumber(user.totalTokens)}</td>
+                  <td className="px-4 py-3">{formatDecimal(user.averageTokens)}</td>
+                </tr>
+              ))}
+              {!tokenByMessage.length && (
                 <tr>
                   <td colSpan={4} className="px-4 py-4 text-center text-neutral-500">
                     داده‌ای ثبت نشده است.

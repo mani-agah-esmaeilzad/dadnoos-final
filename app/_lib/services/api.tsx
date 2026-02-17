@@ -69,6 +69,7 @@ export interface UserSubscription {
   plan_code?: string | null
   plan_title?: string | null
   plan_price_cents?: number
+  upgrade_credit_cents?: number
   token_quota: number
   tokens_used: number
   remaining_tokens: number
