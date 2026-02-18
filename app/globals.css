@@ -263,6 +263,10 @@
   width: 0;
 }
 
+.thin-scrollbar {
+  scrollbar-width: thin;
+}
+
 html,
 body,
 #app {
