@@ -61,8 +61,8 @@ export default async function AdminSupportPage({ searchParams }: SupportPageProp
   return (
     <section className="space-y-8">
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-neutral-500">صندوق پشتیبانی</p>
-        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">درخواست‌های پشتیبانی و گزارش‌ها</h1>
+        <p className="text-sm text-neutral-400">درخواست‌های پشتیبانی و گزارش‌ها</p>
+        <h1 className="text-3xl font-semibold">صندوق پشتیبانی کاربران</h1>
       </div>
 
       <form className="grid gap-4 rounded-3xl border border-neutral-200/60 p-6 shadow-sm dark:border-neutral-800" method="get">
@@ -81,7 +81,7 @@ export default async function AdminSupportPage({ searchParams }: SupportPageProp
             <select
               name="flag"
               defaultValue={flag}
-              className="mt-1 w-full rounded-3xl border border-neutral-300/60 px-3 py-2 text-sm focus:outline-none"
+              className="mt-1 h-12 w-full appearance-none rounded-3xl border border-neutral-400/50 px-5 py-2 text-sm focus:outline-none"
             >
               <option value="any">مورد نیاز (پشتیبانی/گزارش)</option>
               <option value="support">فقط درخواست پشتیبانی</option>
@@ -90,15 +90,15 @@ export default async function AdminSupportPage({ searchParams }: SupportPageProp
           </div>
           <div>
             <label className="text-sm text-neutral-500">از تاریخ</label>
-            <Input type="date" name="from" defaultValue={from} />
+            <Input className='h-12 appearance-none' type="date" name="from" defaultValue={from} />
           </div>
           <div>
             <label className="text-sm text-neutral-500">تا تاریخ</label>
-            <Input type="date" name="to" defaultValue={to} />
+            <Input className='h-12 appearance-none' type="date" name="to" defaultValue={to} />
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button type="submit" className="px-8">
+        <div className="flex justify-start">
+          <Button type="submit" className="px-8 rounded-full">
             اعمال فیلتر
           </Button>
         </div>
@@ -123,7 +123,7 @@ export default async function AdminSupportPage({ searchParams }: SupportPageProp
             size="sm"
             disabled={page <= 1}
             asChild
-            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+            className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
           >
             <a
               href={`?${buildQueryString({
@@ -143,7 +143,7 @@ export default async function AdminSupportPage({ searchParams }: SupportPageProp
             size="sm"
             disabled={page >= totalPages}
             asChild
-            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+            className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
           >
             <a
               href={`?${buildQueryString({

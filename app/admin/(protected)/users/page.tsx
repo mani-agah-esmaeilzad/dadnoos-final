@@ -54,8 +54,8 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
   return (
     <section className="space-y-8">
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-neutral-500">مدیریت کاربران</p>
-        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">کاربران و سهمیه‌ها</h1>
+        <p className="text-sm text-neutral-400">مدیریت کاربران</p>
+        <h1 className="text-3xl font-semibold">کاربران و سهمیه‌ها</h1>
       </div>
 
       <form className="grid gap-4 rounded-3xl border border-neutral-200/60 p-6 shadow-sm dark:border-neutral-800" method="get">
@@ -70,7 +70,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             <select
               name="status"
               defaultValue={status}
-              className="mt-1 w-full rounded-3xl border border-neutral-300/60 px-3 py-2 text-sm focus:outline-none"
+              className="mt-1 w-full h-12 appearance-none rounded-3xl border border-neutral-400/50 px-5 py-2 text-sm focus:outline-none"
             >
               <option value="all">همه</option>
               <option value="active">فعال</option>
@@ -78,22 +78,22 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             </select>
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button type="submit" className="px-8">
+        <div className="flex justify-start">
+          <Button type="submit" className="px-8 rounded-full">
             اعمال فیلتر
           </Button>
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-3xl border border-neutral-200/60 bg-white/70 shadow-sm backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/40">
-        <table className="w-full min-w-full divide-y divide-neutral-200/60 text-sm">
+      <div className="overflow-x-auto rounded-3xl border border-neutral-200/60 bg-white/70 shadow-sm backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/40">
+        <table className="w-full min-w-full divide-y divide-neutral-400/25 text-sm">
           <thead className="bg-neutral-50/60 text-neutral-500 dark:bg-neutral-900/60">
             <tr>
-              <th className="px-4 py-3 text-right font-medium">کاربر</th>
-              <th className="px-4 py-3 text-right font-medium">وضعیت</th>
-              <th className="px-4 py-3 text-right font-medium">مصرف ماه</th>
-              <th className="px-4 py-3 text-right font-medium">ریست بعدی</th>
-              <th className="px-4 py-3 text-right font-medium">عملیات</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">کاربر</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">وضعیت</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">مصرف ماه</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">ریست بعدی</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">عملیات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100/60 dark:divide-neutral-800/80">
@@ -107,11 +107,10 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                 </td>
                 <td className="px-4 py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      user.status === 'active'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${user.status === 'active'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}
                   >
                     {user.status === 'active' ? 'فعال' : 'غیرفعال'}
                   </span>
@@ -150,7 +149,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             size="sm"
             disabled={page <= 1}
             asChild
-            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+            className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
           >
             <Link
               href={`?${buildQueryString({
@@ -167,7 +166,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             size="sm"
             disabled={page >= totalPages}
             asChild
-            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+            className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
           >
             <Link
               href={`?${buildQueryString({

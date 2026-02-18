@@ -5,5 +5,5 @@ import { requireAdminPage } from '@/lib/admin/server'
 
 export default async function AdminProtectedLayout({ children }: { children: ReactNode }) {
   const admin = await requireAdminPage()
-  return <AdminShell admin={admin}>{children}</AdminShell>
+  return <AdminShell admin={admin as any}>{children}</AdminShell>
 }

@@ -81,8 +81,8 @@ export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPage
   return (
     <section className="space-y-8">
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-neutral-500">ممیزی فعالیت‌ها</p>
-        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">گزارش بازرسی</h1>
+        <p className="text-sm text-neutral-400">ممیزی فعالیت‌ها</p>
+        <h1 className="text-3xl font-semibold">گزارش بازرسی</h1>
       </div>
 
       <form className="grid gap-4 rounded-3xl border border-neutral-200/60 p-6 shadow-sm dark:border-neutral-800" method="get">
@@ -98,15 +98,15 @@ export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPage
           </div>
           <div>
             <label className="text-sm text-neutral-500">از تاریخ</label>
-            <Input type="date" name="from" defaultValue={from} />
+            <Input className='h-12 appearance-none' type="date" name="from" defaultValue={from} />
           </div>
           <div>
             <label className="text-sm text-neutral-500">تا تاریخ</label>
-            <Input type="date" name="to" defaultValue={to} />
+            <Input className='h-12 appearance-none' type="date" name="to" defaultValue={to} />
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button type="submit" className="px-8">
+        <div className="flex justify-start">
+          <Button type="submit" className="px-8 rounded-full">
             اعمال فیلتر
           </Button>
         </div>
@@ -116,11 +116,11 @@ export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPage
         <table className="w-full min-w-full divide-y divide-neutral-200/60 text-sm">
           <thead className="bg-neutral-50/60 text-neutral-500 dark:bg-neutral-900/40">
             <tr>
-              <th className="px-4 py-3 text-right font-medium">زمان</th>
-              <th className="px-4 py-3 text-right font-medium">ادمین</th>
-              <th className="px-4 py-3 text-right font-medium">نوع عملیات</th>
-              <th className="px-4 py-3 text-right font-medium">موجودیت</th>
-              <th className="px-4 py-3 text-right font-medium">متا</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">زمان</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">ادمین</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">نوع عملیات</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">موجودیت</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">متا</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100/60 bg-white/70 dark:divide-neutral-800/80 dark:bg-neutral-900/40">
@@ -160,7 +160,7 @@ export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPage
             size="sm"
             disabled={page <= 1}
             asChild
-            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+            className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
           >
             <a
               href={`?${buildQueryString({
@@ -179,7 +179,7 @@ export default async function AdminAuditLogsPage({ searchParams }: AuditLogsPage
             size="sm"
             disabled={page >= totalPages}
             asChild
-            className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+            className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
           >
             <a
               href={`?${buildQueryString({

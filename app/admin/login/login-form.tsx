@@ -37,10 +37,11 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm text-neutral-500">ایمیل سازمانی</label>
+        <label className="text-sm text-neutral-400">ایمیل سازمانی</label>
         <Input
+          dir="auto"
           type="email"
           autoComplete="username"
           value={identifier}
@@ -50,8 +51,9 @@ export default function AdminLoginForm() {
         />
       </div>
       <div>
-        <label className="text-sm text-neutral-500">رمز عبور</label>
+        <label className="text-sm text-neutral-400">رمز عبور</label>
         <Input
+          dir="auto"
           type="password"
           autoComplete="current-password"
           value={password}
@@ -61,9 +63,15 @@ export default function AdminLoginForm() {
         />
       </div>
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'در حال ورود...' : 'ورود به پنل مدیریت'}
-      </Button>
+
+      <div className='space-y-3'>
+        <Button type="submit" className="w-full rounded-3xl" disabled={loading}>
+          {loading ? 'در حال ورود...' : 'ورود به پنل مدیریت'}
+        </Button>
+        <Button variant="outline" type="submit" className="w-full rounded-3xl" onClick={() => router.push("/")} disabled={loading}>
+          صفحه اصلی
+        </Button>
+      </div>
     </form>
   )
 }

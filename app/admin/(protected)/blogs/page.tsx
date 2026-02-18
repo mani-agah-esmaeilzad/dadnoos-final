@@ -63,10 +63,10 @@ export default async function AdminBlogsPage({ searchParams }: PageProps) {
 
   return (
     <section className="space-y-8">
-      <div className="space-y-1">
-        <p className="text-sm text-neutral-500">مدیریت محتوای عمومی</p>
-        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">وبلاگ دادنوس</h1>
-        <p className="text-sm text-neutral-500">
+      <div className="space-y-2">
+        <p className="text-sm text-neutral-400">مدیریت محتوای عمومی</p>
+        <h1 className="text-3xl font-semibold">وبلاگ دادنوس</h1>
+        <p className="text-xs text-neutral-400">
           پست‌های وبلاگ پس از انتشار در صفحه معرفی دادنوس و صفحه اختصاصی وبلاگ قابل مشاهده هستند.
         </p>
       </div>
@@ -83,7 +83,7 @@ export default async function AdminBlogsPage({ searchParams }: PageProps) {
             <select
               name="status"
               defaultValue={status}
-              className="mt-1 w-full rounded-3xl border border-neutral-400/50 bg-white/90 px-3 py-2 text-sm text-neutral-700 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-100"
+              className="mt-1 w-full h-12 appearance-none rounded-3xl border border-neutral-400/50 bg-white/90 px-5 py-2 text-sm text-neutral-700 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-100"
             >
               <option value="all">همه</option>
               <option value="published">منتشر شده</option>
@@ -91,8 +91,8 @@ export default async function AdminBlogsPage({ searchParams }: PageProps) {
             </select>
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button type="submit" className="px-8">
+        <div className="flex justify-start">
+          <Button type="submit" className="px-8 rounded-full">
             اعمال فیلتر
           </Button>
         </div>

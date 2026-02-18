@@ -63,10 +63,10 @@ export default async function AdminDashboardPage({ searchParams }: DashboardProp
   return (
     <section className="space-y-8">
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-neutral-500">بررسی اجمالی</p>
+        <p className="text-sm text-neutral-400">بررسی اجمالی</p>
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">داشبورد مدیریت</h1>
-          <form className="flex items-center gap-3 rounded-3xl border border-neutral-200/60 px-4 py-2 text-sm dark:border-neutral-800" method="get">
+          <h1 className="text-3xl font-semibold">داشبورد مدیریت</h1>
+          <form className="flex w-full max-w-sm items-center gap-3 rounded-3xl border border-neutral-400/25 ps-4 p-2 text-sm" method="get">
             <label className="text-neutral-500" htmlFor="range-select">
               بازه:
             </label>
@@ -74,12 +74,12 @@ export default async function AdminDashboardPage({ searchParams }: DashboardProp
               id="range-select"
               name="range"
               defaultValue={overview.range.label}
-              className="rounded-2xl border border-neutral-300/60 px-3 py-1 text-sm text-neutral-700 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-200"
+              className="rounded-2xl border appearance-none border-neutral-400/50 px-5 py-1.5 text-sm text-neutral-700 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-200"
             >
               <option value="7d">۷ روز گذشته</option>
               <option value="30d">۳۰ روز گذشته</option>
             </select>
-            <Button type="submit" size="sm" className="rounded-2xl px-4">
+            <Button type="submit" size="sm" className="rounded-2xl px-4 ms-auto">
               بروزرسانی
             </Button>
           </form>

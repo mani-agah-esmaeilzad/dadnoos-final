@@ -61,6 +61,11 @@ export default function Setting({
         toggleContactModal()
       },
     },
+    {
+      label: "ثبت ایده‌ها و نظرات",
+      visible: true,
+      onClick: () => navigate("/feedback"),
+    },
   ]
 
   return (

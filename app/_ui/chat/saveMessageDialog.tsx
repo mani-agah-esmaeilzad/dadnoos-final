@@ -92,7 +92,7 @@ export function SaveMessageDialog({
               <select
                 value={selectedCaseId ?? ''}
                 onChange={(event) => setSelectedCaseId(event.target.value || undefined)}
-                className="w-full rounded-2xl border border-neutral-300/70 bg-white/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:bg-neutral-900/40 dark:border-neutral-700"
+                className="w-full rounded-3xl appearance-none border border-neutral-300/70 bg-white/80 px-5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:bg-neutral-900/40 dark:border-neutral-700"
               >
                 <option value="">بدون پرونده (ذخیره عمومی)</option>
                 {sortedCases.map((caseItem) => (

@@ -1,9 +1,9 @@
-import { listTrackingEvents } from '@/lib/admin/events'
+import { listFeedback } from '@/lib/admin/feedback'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
 import { withDbFallback } from '@/lib/db/fallback'
 
-interface EventsPageProps {
+interface FeedbackPageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
@@ -27,46 +27,53 @@ function formatDateTime(date: Date) {
   }).format(date)
 }
 
-function formatPayload(payload: unknown) {
-  if (!payload) return '—'
-  try {
-    return JSON.stringify(payload, null, 2)
-  } catch {
-    return '—'
-  }
+const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+  NEW: { label: 'جدید', className: 'bg-amber-100 text-amber-700' },
+  REVIEWED: { label: 'بررسی شد', className: 'bg-sky-100 text-sky-700' },
+  RESOLVED: { label: 'بسته شد', className: 'bg-emerald-100 text-emerald-700' },
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  IDEA: 'ایده / نظر',
+  REPORT: 'گزارش مشکل',
 }
 
 export const metadata = {
-  title: 'رویدادهای سیستمی',
+  title: 'ایده‌ها و نظرات کاربران',
 }
 
-export default async function AdminEventsPage({ searchParams }: EventsPageProps) {
+export default async function AdminFeedbackPage({ searchParams }: FeedbackPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {}
   const pageParam = parseParam(resolvedSearchParams.page)
   const page = Math.max(Number(pageParam ?? '1'), 1)
-  const eventType = parseParam(resolvedSearchParams.eventType) ?? ''
+  const query = parseParam(resolvedSearchParams.query) ?? ''
   const userId = parseParam(resolvedSearchParams.userId) ?? ''
+  const status = parseParam(resolvedSearchParams.status) ?? ''
+  const type = parseParam(resolvedSearchParams.type) ?? ''
   const from = parseParam(resolvedSearchParams.from) ?? ''
   const to = parseParam(resolvedSearchParams.to) ?? ''
 
   const fallbackData = {
     total: 0,
     page,
-    pageSize: 25,
+    pageSize: 20,
     items: [],
   }
+
   const data = await withDbFallback(
     () =>
-      listTrackingEvents({
+      listFeedback({
         page,
-        pageSize: 25,
-        eventType: eventType || undefined,
+        pageSize: 20,
+        query: query || undefined,
         userId: userId || undefined,
+        status: status ? (status as 'NEW' | 'REVIEWED' | 'RESOLVED') : undefined,
+        type: type ? (type as 'IDEA' | 'REPORT') : undefined,
         from: from ? new Date(from) : undefined,
         to: to ? new Date(to) : undefined,
       }),
     fallbackData,
-    'admin-events'
+    'admin-feedback'
   )
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize))
@@ -74,20 +81,45 @@ export default async function AdminEventsPage({ searchParams }: EventsPageProps)
   return (
     <section className="space-y-8">
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-neutral-400">رویدادهای عملیاتی</p>
-        <h1 className="text-3xl font-semibold">مانیتورینگ سیستم</h1>
+        <p className="text-sm text-neutral-400">بازخوردها و گزارش‌های کاربران</p>
+        <h1 className="text-3xl font-semibold">ثبت ایده‌ها و نظرات</h1>
       </div>
 
       <form className="grid gap-4 rounded-3xl border border-neutral-200/60 p-6 shadow-sm dark:border-neutral-800" method="get">
         <input type="hidden" name="page" value="1" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className="text-sm text-neutral-500">نوع رویداد</label>
-            <Input name="eventType" placeholder="chat_request" defaultValue={eventType} />
+            <label className="text-sm text-neutral-500">جستجو</label>
+            <Input name="query" placeholder="عنوان یا متن" defaultValue={query} />
           </div>
           <div>
             <label className="text-sm text-neutral-500">شناسه کاربر</label>
-            <Input name="userId" placeholder="user id" defaultValue={userId} />
+            <Input name="userId" placeholder="User ID" defaultValue={userId} />
+          </div>
+          <div>
+            <label className="text-sm text-neutral-500">نوع پیام</label>
+            <select
+              name="type"
+              defaultValue={type}
+              className="mt-1 h-12 w-full appearance-none rounded-3xl border border-neutral-400/50 px-5 py-2 text-sm focus:outline-none"
+            >
+              <option value="">همه</option>
+              <option value="IDEA">ایده / نظر</option>
+              <option value="REPORT">گزارش مشکل</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-neutral-500">وضعیت</label>
+            <select
+              name="status"
+              defaultValue={status}
+              className="mt-1 h-12 w-full appearance-none rounded-3xl border border-neutral-400/50 px-5 py-2 text-sm focus:outline-none"
+            >
+              <option value="">همه</option>
+              <option value="NEW">جدید</option>
+              <option value="REVIEWED">بررسی شد</option>
+              <option value="RESOLVED">بسته شد</option>
+            </select>
           </div>
           <div>
             <label className="text-sm text-neutral-500">از تاریخ</label>
@@ -111,32 +143,47 @@ export default async function AdminEventsPage({ searchParams }: EventsPageProps)
             <tr>
               <th className="px-4 py-3 text-right font-medium">زمان</th>
               <th className="px-4 py-3 text-right font-medium">نوع</th>
+              <th className="px-4 py-3 text-right font-medium">وضعیت</th>
               <th className="px-4 py-3 text-right font-medium">کاربر</th>
-              <th className="px-4 py-3 text-right font-medium">منبع</th>
-              <th className="px-4 py-3 text-right font-medium">جزئیات</th>
+              <th className="px-4 py-3 text-right font-medium">عنوان</th>
+              <th className="px-4 py-3 text-right font-medium">پیام</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100/60 bg-white/80 dark:divide-neutral-800/80 dark:bg-neutral-900/40">
-            {data.items.map((event) => (
-              <tr key={event.id}>
-                <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">{formatDateTime(event.createdAt)}</td>
-                <td className="px-4 py-3 text-neutral-700 dark:text-neutral-200">{event.eventType}</td>
-                <td className="px-4 py-3">
-                  <div className="text-neutral-800 dark:text-neutral-100">{event.username || '—'}</div>
-                  <div className="text-xs text-neutral-500">{event.userId || '—'}</div>
-                </td>
-                <td className="px-4 py-3 text-neutral-600">{event.source || '—'}</td>
-                <td className="px-4 py-3">
-                  <pre className="max-h-40 overflow-y-auto rounded-2xl bg-neutral-50/80 p-3 text-xs text-neutral-700 dark:bg-neutral-900/50 dark:text-neutral-200">
-                    {formatPayload(event.payload)}
-                  </pre>
-                </td>
-              </tr>
-            ))}
+            {data.items.map((item) => {
+              const statusInfo = STATUS_LABELS[item.status] ?? STATUS_LABELS.NEW
+              return (
+                <tr key={item.id}>
+                  <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
+                    {formatDateTime(item.createdAt)}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-700 dark:text-neutral-200">
+                    {TYPE_LABELS[item.type] ?? item.type}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.className}`}>
+                      {statusInfo.label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-neutral-800 dark:text-neutral-100">{item.username || '—'}</div>
+                    <div className="text-xs text-neutral-500">{item.userId || '—'}</div>
+                  </td>
+                  <td className="px-4 py-3 text-neutral-800 dark:text-neutral-100">
+                    {item.title}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-600">
+                    <p className="max-w-xs line-clamp-3">
+                      {item.message}
+                    </p>
+                  </td>
+                </tr>
+              )
+            })}
             {!data.items.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-neutral-500">
-                  رویداد ثبت نشده است.
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-neutral-500">
+                  بازخوردی ثبت نشده است.
                 </td>
               </tr>
             )}
@@ -159,8 +206,10 @@ export default async function AdminEventsPage({ searchParams }: EventsPageProps)
             <a
               href={`?${buildQueryString({
                 page: page - 1,
-                eventType: eventType || undefined,
+                query: query || undefined,
                 userId: userId || undefined,
+                status: status || undefined,
+                type: type || undefined,
                 from: from || undefined,
                 to: to || undefined,
               })}`}
@@ -178,8 +227,10 @@ export default async function AdminEventsPage({ searchParams }: EventsPageProps)
             <a
               href={`?${buildQueryString({
                 page: page + 1,
-                eventType: eventType || undefined,
+                query: query || undefined,
                 userId: userId || undefined,
+                status: status || undefined,
+                type: type || undefined,
                 from: from || undefined,
                 to: to || undefined,
               })}`}

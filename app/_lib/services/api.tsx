@@ -69,6 +69,7 @@ export interface UserSubscription {
   plan_code?: string | null
   plan_title?: string | null
   plan_price_cents?: number
+  upgrade_credit_cents?: number
   token_quota: number
   tokens_used: number
   remaining_tokens: number
@@ -116,6 +117,16 @@ export interface VoiceLiveChunkResponse {
     audio_base64?: string
     mime_type?: string
   }
+}
+
+export interface FeedbackPayload {
+  title: string
+  message: string
+  type: 'idea' | 'report'
+}
+
+export interface FeedbackResponse {
+  id: string
 }
 
 export class ApiError extends Error {
@@ -380,6 +391,13 @@ class ApiService {
   async getPayments(): Promise<{ payments: PaymentRecord[] }> {
     return this.request<{ payments: PaymentRecord[] }>('/api/billing/payments', {
       method: 'GET',
+    })
+  }
+
+  async submitFeedback(payload: FeedbackPayload): Promise<FeedbackResponse> {
+    return this.request<FeedbackResponse>('/api/v1/feedback', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     })
   }
 

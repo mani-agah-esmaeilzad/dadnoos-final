@@ -148,14 +148,14 @@ export default function PromptManager({ initialPrompts }: { initialPrompts: Prom
   return (
     <div className="space-y-6">
       <div className="overflow-x-auto rounded-3xl border border-neutral-200/70 bg-white/90 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/40">
-        <table className="min-w-full divide-y divide-neutral-200/70 text-sm">
+        <table className="min-w-full divide-y divide-neutral-400/25 text-sm">
           <thead className="bg-neutral-50/90 text-neutral-500 dark:bg-neutral-900/60">
             <tr>
-              <th className="px-4 py-3 text-right font-medium">عنوان</th>
-              <th className="px-4 py-3 text-right font-medium">نوع</th>
-              <th className="px-4 py-3 text-right font-medium">مدل</th>
-              <th className="px-4 py-3 text-right font-medium">آخرین وضعیت</th>
-              <th className="px-4 py-3 text-right font-medium">اقدام</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">عنوان</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">نوع</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">مدل</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">آخرین وضعیت</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">اقدام</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100 bg-white/80 dark:divide-neutral-800 dark:bg-transparent">

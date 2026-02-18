@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   try {
     const { getActiveSubscription } = await import('@/lib/billing/quota')
     const { getPlanMessageLimit } = await import('@/lib/billing/messageQuota')
+    const { calculateMessageBasedCredit } = await import('@/lib/billing/upgradeCredit')
     const { prisma } = await import('@/lib/db/prisma')
     const auth = requireAuth(req)
     const subscription = await getActiveSubscription(auth.sub)
@@ -31,15 +32,21 @@ export async function GET(req: NextRequest) {
       ? await prisma.subscriptionPlan.findUnique({ where: { id: subscription.planId } })
       : null
     const messageQuota = getPlanMessageLimit(plan?.code)
-    const messagesUsed = await prisma.message.count({
+    const messagesUsed = await prisma.trackingEvent.count({
       where: {
         userId: auth.sub,
-        role: 'user',
-        timestamp: {
+        eventType: 'chat_request',
+        source: 'api/v1/chat',
+        createdAt: {
           gte: subscription.startedAt,
           lte: subscription.expiresAt,
         },
       },
+    })
+    const upgradeCredit = calculateMessageBasedCredit({
+      planPriceCents: plan?.priceCents ?? 0,
+      messageQuota,
+      messagesUsed,
     })
 
     const payload = {
@@ -53,6 +60,7 @@ export async function GET(req: NextRequest) {
       message_quota: messageQuota,
       messages_used: messagesUsed,
       remaining_messages: Math.max(messageQuota - messagesUsed, 0),
+      upgrade_credit_cents: upgradeCredit,
       started_at: subscription.startedAt.toISOString(),
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,

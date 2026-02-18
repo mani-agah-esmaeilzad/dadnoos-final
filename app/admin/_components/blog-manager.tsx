@@ -7,6 +7,7 @@ import { normalizeSlug } from '@/lib/blog/slug'
 import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
 import { Textarea } from '@/app/_ui/components/textarea'
+import { toPersianNumber } from '@/app/_lib/utils'
 
 type BlogPostRow = {
   id: string
@@ -203,35 +204,34 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
     <div className="space-y-6">
       {actionMessage && (
         <div
-          className={`rounded-2xl border px-4 py-3 text-sm ${
-            actionMessage.tone === 'success'
-              ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-200'
-              : 'border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200'
-          }`}
+          className={`rounded-2xl border px-4 py-3 text-sm ${actionMessage.tone === 'success'
+            ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-200'
+            : 'border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200'
+            }`}
         >
           {actionMessage.text}
         </div>
       )}
       <div className="rounded-3xl border border-neutral-200/60 bg-white/90 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/40">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200/60 px-6 py-4 dark:border-neutral-800">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200/60 ps-6 p-4 dark:border-neutral-800">
           <div>
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">پست‌های وبلاگ</h2>
-            <p className="text-sm text-neutral-500">
-              {pagination.total} پست ثبت‌شده
+            <h2 className="text-xl font-semibold">پست‌های وبلاگ</h2>
+            <p className="text-sm text-neutral-400 pt-1">
+              {toPersianNumber(pagination.total)} پست ثبت‌شده
             </p>
           </div>
-          <Button onClick={openCreateForm}>پست جدید</Button>
+          <Button className='rounded-full' variant="secondary" onClick={openCreateForm}>پست جدید</Button>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] divide-y divide-neutral-100 text-sm">
+          <table className="w-full min-w-[720px] divide-y divide-neutral-400/25 text-sm">
             <thead className="bg-neutral-50/80 text-neutral-500 dark:bg-neutral-900/50">
               <tr>
-                <th className="px-5 py-3 text-right font-medium">عنوان</th>
-                <th className="px-5 py-3 text-right font-medium">وضعیت</th>
-                <th className="px-5 py-3 text-right font-medium">آخرین بروزرسانی</th>
-                <th className="px-5 py-3 text-right font-medium">نویسنده</th>
-                <th className="px-5 py-3 text-right font-medium">اقدامات</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">عنوان</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">وضعیت</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">آخرین بروزرسانی</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">نویسنده</th>
+                <th className="px-5 py-3 text-right font-medium whitespace-nowrap">اقدامات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 bg-white/60 dark:divide-neutral-800 dark:bg-neutral-900/20">
@@ -244,24 +244,23 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                        post.published
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200'
-                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200'
-                      }`}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${post.published
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200'
+                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200'
+                        }`}
                     >
                       {post.published ? 'منتشر شده' : 'پیش‌نویس'}
                     </span>
-                    <div className="mt-1 text-xs text-neutral-500">
+                    <div className="mt-1 text-xs text-neutral-500 whitespace-nowrap">
                       {post.published ? formatDate(post.publishedAt) : 'منتشر نشده'}
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-sm text-neutral-700 dark:text-neutral-200">{formatDate(post.updatedAt)}</td>
-                  <td className="px-5 py-4 text-sm text-neutral-600">
+                  <td className="px-5 py-4 text-sm text-neutral-700 dark:text-neutral-200 whitespace-nowrap">{formatDate(post.updatedAt)}</td>
+                  <td className="px-5 py-4 text-sm text-neutral-600 whitespace-nowrap">
                     {post.authorEmail ?? '—'}
                   </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <div className="grid gap-2">
                       <Button size="sm" variant="secondary" onClick={() => openEditForm(post)}>
                         ویرایش
                       </Button>
@@ -298,7 +297,7 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
               variant="ghost"
               size="sm"
               disabled={pagination.page <= 1}
-              className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+              className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
             >
               <a
                 href={`?${buildQueryString({
@@ -315,7 +314,7 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
               variant="ghost"
               size="sm"
               disabled={pagination.page >= totalPages}
-              className="border border-neutral-200/60 px-4 py-1 disabled:cursor-not-allowed"
+              className="border border-neutral-400/25 px-4 py-1 disabled:cursor-not-allowed"
             >
               <a
                 href={`?${buildQueryString({
@@ -332,7 +331,7 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
       </div>
 
       {formOpen && (
-        <div className="rounded-3xl border border-neutral-200/60 bg-white/95 p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/60">
+        <div className="rounded-3xl border border-neutral-300/25 bg-white/95 p-6 shadow-sm dark:bg-neutral-900/60">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -340,12 +339,12 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
               </h3>
               <p className="text-sm text-neutral-500">در صورت انتشار، مقاله بلافاصله در سایت نمایش داده می‌شود.</p>
             </div>
-            <Button variant="ghost" onClick={closeForm}>
+            <Button className='hidden md:block' variant="ghost" onClick={closeForm}>
               بستن
             </Button>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <label className="text-sm text-neutral-500">عنوان</label>
               <Input value={formData.title} onChange={(event) => handleTitleChange(event.target.value)} placeholder="عنوان مقاله" />
@@ -382,11 +381,11 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
                 placeholder="متن کامل مقاله را در اینجا بنویسید..."
               />
             </div>
-            <div className="md:col-span-2 flex items-center gap-3 rounded-2xl border border-neutral-200/60 px-4 py-3 text-sm dark:border-neutral-800">
+            <div className="md:col-span-2 flex items-center gap-3 rounded-3xl border border-neutral-400/50 p-3 text-sm">
               <input
                 id="published-checkbox"
                 type="checkbox"
-                className="size-4"
+                className="appearance-none size-5 border cursor-pointer border-neutral-400 rounded-md bg-transparent checked:bg-emerald-700 checked:border-emerald-700 checked:after:content-['✓'] checked:after:text-white checked:after:block checked:after:text-center checked:after:leading-5 transition-all"
                 checked={formData.published}
                 onChange={(event) => updateFormField('published', event.target.checked)}
               />
@@ -398,8 +397,8 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
 
           {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
-          <div className="mt-6 flex flex-wrap justify-end gap-3">
-            <Button variant="ghost" onClick={closeForm}>
+          <div className="mt-6 flex flex-wrap justify-start gap-3">
+            <Button className='px-10' variant="outline" onClick={closeForm}>
               لغو
             </Button>
             <Button onClick={submitForm} disabled={isPending}>

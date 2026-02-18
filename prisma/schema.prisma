@@ -23,6 +23,7 @@ model User {
   trackingEvents   TrackingEvent[]
   payments         Payment[]
   discountRedemptions DiscountRedemption[]
+  feedbacks        Feedback[]
 }
 
 model ChatSession {
@@ -220,6 +221,17 @@ enum AdminRole {
   ANALYST
 }
 
+enum FeedbackType {
+  IDEA
+  REPORT
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  RESOLVED
+}
+
 model AdminUser {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -302,6 +314,23 @@ model TokenUsage {
 
   @@index([userId, createdAt], map: "ix_tokenusage_user_time")
   @@index([chatId, createdAt], map: "ix_tokenusage_chat_time")
+}
+
+model Feedback {
+  id        String         @id @default(uuid())
+  userId    String?
+  type      FeedbackType   @default(IDEA)
+  title     String
+  message   String         @db.Text
+  status    FeedbackStatus @default(NEW)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt], map: "ix_feedback_created")
+  @@index([status, createdAt], map: "ix_feedback_status_time")
+  @@index([userId, createdAt], map: "ix_feedback_user_time")
 }
 
 model TrackingEvent {

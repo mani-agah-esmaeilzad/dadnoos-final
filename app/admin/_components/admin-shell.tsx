@@ -28,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'وبلاگ', href: '/admin/blogs' },
   { label: 'پرامپت‌ها', href: '/admin/prompts' },
   { label: 'پشتیبانی', href: '/admin/support' },
+  { label: 'ایده‌ها و نظرات', href: '/admin/feedback' },
   { label: 'رویدادها', href: '/admin/events' },
   { label: 'گزارش بازرسی', href: '/admin/audit-logs' },
 ]
@@ -44,21 +45,18 @@ export default function AdminShell({ admin, children }: AdminShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100 text-neutral-900 dark:from-neutral-950 dark:via-neutral-900 dark:to-black">
+    <div className="flex h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-black overflow-hidden overscroll-none">
       <aside
         className={cn(
-          'fixed inset-y-0 right-0 z-30 w-72 transform border-l border-neutral-200/60 bg-white/80 p-6 shadow-xl backdrop-blur-xl transition-transform dark:border-neutral-800 dark:bg-neutral-900/70',
+          'fixed inset-y-0 right-0 z-30 w-80 flex flex-col transform border-0 md:border-l border-neutral-200/60 bg-white/80 p-6 backdrop-blur-xl transition-transform dark:border-neutral-800 dark:bg-neutral-900/70 pt-safe-10',
           sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         )}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-neutral-500">پنل مدیریت</p>
-            <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Dadnoos</p>
-          </div>
+        <div className="flex items-center justify-between py-2">
+          <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">پنل مدیریت دادنوس</p>
           <Shield className="text-[#C8A175]" size={24} />
         </div>
-        <nav className="mt-10 space-y-2">
+        <nav className="mt-10 space-y-2 mb-4">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href
             return (
@@ -66,10 +64,11 @@ export default function AdminShell({ admin, children }: AdminShellProps) {
                 key={item.href}
                 href={item.comingSoon ? '#' : item.href}
                 aria-disabled={item.comingSoon}
+                onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-all',
+                  'flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-all hover:bg-neutral-400/15 active:bg-neutral-400/25',
                   active
-                    ? 'bg-neutral-900 text-white shadow-lg dark:bg-neutral-800'
+                    ? 'bg-neutral-700 text-white dark:bg-neutral-800'
                     : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800/60',
                   item.comingSoon && 'cursor-not-allowed opacity-60'
                 )}
@@ -84,37 +83,58 @@ export default function AdminShell({ admin, children }: AdminShellProps) {
             )
           })}
         </nav>
-        <div className="mt-auto space-y-2 rounded-2xl border border-neutral-200/70 p-4 text-sm dark:border-neutral-800">
-          <p className="font-semibold text-neutral-900 dark:text-neutral-100">{admin.email}</p>
-          <p className="text-xs text-neutral-500">نقش: {admin.role.toLowerCase()}</p>
+
+        <div className="mt-auto mb-2 space-y-2 rounded-3xl border border-neutral-400/50 dark:border-0 dark:bg-neutral-400/15 p-4 text-sm">
+          <p className="font-semibold text-neutral-900 dark:text-neutral-100">{admin?.email}</p>
+          <p className="text-xs text-neutral-400">نقش: {admin?.role.toLowerCase()}</p>
           <Button
             onClick={handleLogout}
-            variant="ghost"
-            className="mt-3 w-full justify-center border border-neutral-200/70 text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300"
+            variant="outline"
+            className="mt-4 w-full justify-center border-red-600 text-red-500 hover:bg-red-50 active:bg-red-100"
           >
             <LogOut size={16} />
             خروج
           </Button>
         </div>
       </aside>
-      <div className="flex flex-1 flex-col pr-0 lg:pr-72">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-neutral-200/60 bg-white/70 px-6 backdrop-blur-xl dark:border-neutral-800 dark:bg-neutral-900/60">
+
+      <div
+        className={cn(
+          "fixed inset-0 z-20 bg-black/45 dark:bg-black/75 transition-opacity duration-200 lg:hidden",
+          sidebarOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <div
+        className={cn(
+          "flex flex-1 flex-col pr-0 lg:pr-80 transition-transform overflow-y-auto overscroll-none no-scrollbar",
+          sidebarOpen ? "-translate-x-80" : "translate-x-0",
+        )}
+      >
+        <header className="sticky top-0 z-30 flex py-2 items-center justify-between border-b border-neutral-200/60 bg-white/70 px-4 backdrop-blur-xl dark:border-neutral-800 dark:bg-neutral-900/60 pt-safe-10">
           <div className="lg:hidden">
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen((prev) => !prev)}>
-              <Menu />
+            <Button className='grid gap-1.5 p-4 py-3.5 rounded-lg cursor-pointer' variant="ghost" size="icon" onClick={() => setSidebarOpen((prev) => !prev)}>
+              <div className='bg-black dark:bg-white rounded-full h-0.5 w-4' />
+              <div className='bg-black dark:bg-white rounded-full h-0.5 w-2' />
             </Button>
           </div>
           <div>
             <p className="text-sm text-neutral-500">خوش آمدید</p>
-            <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{admin.email}</p>
+            <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{admin?.email}</p>
           </div>
           <div className="hidden items-center gap-3 text-sm text-neutral-500 lg:flex">
             <span className="rounded-full border border-neutral-200/70 px-3 py-1 text-xs uppercase tracking-widest text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
-              {admin.role}
+              {admin?.role}
             </span>
           </div>
         </header>
-        <main className="flex-1 px-6 py-8">{children}</main>
+
+        <main className="flex-1 px-4 pt-8 pb-24 max-w-screen">
+          {children}
+        </main>
       </div>
     </div>
   )

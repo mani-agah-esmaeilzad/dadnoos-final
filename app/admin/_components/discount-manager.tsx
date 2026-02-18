@@ -136,9 +136,9 @@ export function DiscountManager({ initialDiscounts }: DiscountManagerProps) {
   return (
     <section className="space-y-8">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-neutral-500">کدهای قابل ارائه به کاربران</p>
-          <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">مدیریت تخفیف‌ها</h1>
+        <div className='space-y-2'>
+          <p className="text-sm text-neutral-400">کدهای قابل ارائه به کاربران</p>
+          <h1 className="text-3xl font-semibold">مدیریت تخفیف‌ها</h1>
         </div>
         <Button
           variant="ghost"
@@ -187,6 +187,7 @@ export function DiscountManager({ initialDiscounts }: DiscountManagerProps) {
           <div>
             <label className="text-sm text-neutral-500">تاریخ انقضا</label>
             <Input
+              className='h-10 max-w-[calc(100%-18px)]'
               type="date"
               value={form.expiresAt}
               onChange={(event) => setForm((prev) => ({ ...prev, expiresAt: event.target.value }))}
@@ -202,29 +203,29 @@ export function DiscountManager({ initialDiscounts }: DiscountManagerProps) {
             className="min-h-[80px]"
           />
         </div>
-        <div className="flex justify-end">
-          <Button type="submit" className="px-8" disabled={isCreating}>
+        <div className="flex justify-start">
+          <Button type="submit" className="px-8 rounded-full" disabled={isCreating}>
             ثبت کد جدید
           </Button>
         </div>
       </form>
 
-      <div className="rounded-3xl border border-neutral-200/60 shadow-sm dark:border-neutral-800 overflow-hidden">
-        <table className="w-full min-w-full divide-y divide-neutral-200/60 text-sm">
+      <div className="rounded-3xl border border-neutral-200/60 shadow-sm dark:border-neutral-800 overflow-x-auto">
+        <table className="w-full min-w-full divide-y divide-neutral-400/25 text-sm">
           <thead className="bg-neutral-50/60 text-neutral-500 dark:bg-neutral-900/60">
             <tr>
-              <th className="px-4 py-3 text-right font-medium">کد</th>
-              <th className="px-4 py-3 text-right font-medium">درصد</th>
-              <th className="px-4 py-3 text-right font-medium">استفاده شده</th>
-              <th className="px-4 py-3 text-right font-medium">انقضا</th>
-              <th className="px-4 py-3 text-right font-medium">وضعیت</th>
-              <th className="px-4 py-3 text-right font-medium">عملیات</th>
+              <th className="px-4 py-4 text-right font-medium whitespace-nowrap">کد</th>
+              <th className="px-4 py-4 text-right font-medium whitespace-nowrap">درصد</th>
+              <th className="px-4 py-4 text-right font-medium whitespace-nowrap">استفاده شده</th>
+              <th className="px-4 py-4 text-right font-medium whitespace-nowrap">انقضا</th>
+              <th className="px-4 py-4 text-right font-medium whitespace-nowrap">وضعیت</th>
+              <th className="px-4 py-4 text-right font-medium whitespace-nowrap">عملیات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100/60 bg-white/80 dark:divide-neutral-800/80 dark:bg-neutral-900/40">
             {discounts.length === 0 && (
               <tr>
-                <td className="px-4 py-5 text-center text-neutral-500" colSpan={6}>
+                <td className="px-4 py-10 text-center text-neutral-500" colSpan={6}>
                   تا کنون کدی ثبت نشده است.
                 </td>
               </tr>
@@ -249,11 +250,10 @@ export function DiscountManager({ initialDiscounts }: DiscountManagerProps) {
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      discount.is_active
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-neutral-200 text-neutral-600'
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${discount.is_active
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-neutral-200 text-neutral-600'
+                      }`}
                   >
                     {discount.is_active ? 'فعال' : 'غیرفعال'}
                   </span>

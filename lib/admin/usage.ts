@@ -151,3 +151,96 @@ export async function getTopMessagingUsers({
     totalMessages: group._count._all ?? 0,
   }))
 }
+
+export async function getUserTokenUsageByMessage({
+  from,
+  to,
+  limit,
+}: {
+  from?: Date
+  to?: Date
+  limit: number
+}) {
+  const tokenWhere: Record<string, unknown> = {}
+  if (from || to) {
+    tokenWhere['createdAt'] = {
+      gte: from,
+      lte: to,
+    }
+  }
+
+  const messageWhere: Record<string, unknown> = {
+    eventType: 'chat_request',
+    source: 'api/v1/chat',
+    userId: { not: null },
+  }
+  if (from || to) {
+    messageWhere['createdAt'] = {
+      gte: from,
+      lte: to,
+    }
+  }
+
+  const [tokenGroups, messageGroups] = await Promise.all([
+    prisma.tokenUsage.groupBy({
+      by: ['userId'],
+      where: tokenWhere,
+      _sum: {
+        totalTokens: true,
+        promptTokens: true,
+        completionTokens: true,
+      },
+    }),
+    prisma.trackingEvent.groupBy({
+      by: ['userId'],
+      where: messageWhere,
+      _count: {
+        _all: true,
+      },
+    }),
+  ])
+
+  const tokenMap = new Map(
+    tokenGroups.map((group) => [
+      group.userId,
+      {
+        totalTokens: group._sum.totalTokens ?? 0,
+        promptTokens: group._sum.promptTokens ?? 0,
+        completionTokens: group._sum.completionTokens ?? 0,
+      },
+    ])
+  )
+  const messageMap = new Map(
+    messageGroups
+      .filter((group) => group.userId)
+      .map((group) => [group.userId as string, group._count._all ?? 0])
+  )
+
+  const userIds = Array.from(new Set([...tokenMap.keys(), ...messageMap.keys()]))
+  if (!userIds.length) return []
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, username: true },
+  })
+  const nameMap = new Map(users.map((user) => [user.id, user.username]))
+
+  const rows = userIds.map((userId) => {
+    const tokenGroup = tokenMap.get(userId) ?? { totalTokens: 0, promptTokens: 0, completionTokens: 0 }
+    const totalMessages = messageMap.get(userId) ?? 0
+    const averageTokens = totalMessages > 0 ? tokenGroup.totalTokens / totalMessages : 0
+    return {
+      userId,
+      username: nameMap.get(userId) || userId,
+      totalTokens: tokenGroup.totalTokens,
+      promptTokens: tokenGroup.promptTokens,
+      completionTokens: tokenGroup.completionTokens,
+      totalMessages,
+      averageTokens,
+    }
+  })
+
+  return rows
+    .sort((a, b) => b.averageTokens - a.averageTokens)
+    .slice(0, Math.max(limit, 1))
+}

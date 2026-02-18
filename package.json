@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3052 --turbopack",
+    "dev": "next dev -p 2581 --turbopack",
     "build": "node scripts/ensure-next-lock.js && next build --webpack",
     "start": "next start -p 3052",
     "lint": "biome check",

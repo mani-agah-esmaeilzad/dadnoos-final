@@ -33,9 +33,9 @@ export default async function AdminPromptsPage() {
   return (
     <section className="space-y-6">
       <div className="space-y-2">
-        <p className="text-sm text-neutral-500">پیکربندی هوش مصنوعی</p>
-        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">مدیریت پرامپت‌ها</h1>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-neutral-400">پیکربندی هوش مصنوعی</p>
+        <h1 className="text-3xl font-semibold">مدیریت پرامپت‌ها</h1>
+        <p className="text-xs text-neutral-400">
           در این صفحه می‌توانید پرامپت هسته، مسیریاب و ماژول‌ها را مشاهده، ویرایش و در صورت نیاز به نسخه پیش‌فرض بازگردانید.
         </p>
       </div>

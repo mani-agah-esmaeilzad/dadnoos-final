@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth/guards'
 import { env } from '@/lib/env'
 import { ensurePlanCatalog } from '@/lib/billing/defaultPlan'
 import { getPlanMessageLimit } from '@/lib/billing/messageQuota'
+import { calculateMessageBasedCredit } from '@/lib/billing/upgradeCredit'
 
 const bodySchema = z.object({
   plan_id: z.string().min(1),
@@ -64,7 +65,23 @@ export async function POST(req: NextRequest) {
       if (plan.priceCents <= previousPrice) {
         return NextResponse.json({ detail: 'فقط امکان ارتقا به پلن بالاتر وجود دارد.' }, { status: 400 })
       }
-      upgradeCredit = previousPrice
+      const messageQuota = getPlanMessageLimit(activeSubscription.plan?.code)
+      const messagesUsed = await prisma.trackingEvent.count({
+        where: {
+          userId: auth.sub,
+          eventType: 'chat_request',
+          source: 'api/v1/chat',
+          createdAt: {
+            gte: activeSubscription.startedAt,
+            lte: new Date(),
+          },
+        },
+      })
+      upgradeCredit = calculateMessageBasedCredit({
+        planPriceCents: previousPrice,
+        messageQuota,
+        messagesUsed,
+      })
       upgradeFromId = activeSubscription.id
     }
 
@@ -135,7 +152,7 @@ export async function POST(req: NextRequest) {
         netAmount,
         currency: 'IRR',
         upgradeFromSubscriptionId: upgradeFromId,
-        metadata: upgradeFromId ? { upgradeCredit } : undefined,
+        metadata: upgradeFromId ? { upgradeCredit, creditSource: 'messages' } : undefined,
       },
       include: { discount: true },
     })
@@ -169,6 +186,7 @@ export async function POST(req: NextRequest) {
       expires_at: subscription.expiresAt.toISOString(),
       active: subscription.active,
       plan_price_cents: subscription.plan?.priceCents ?? 0,
+      upgrade_credit_cents: upgradeFromId ? upgradeCredit : 0,
       upgrade_from_subscription_id: upgradeFromId ?? null,
       payment: {
         id: payment.id,
