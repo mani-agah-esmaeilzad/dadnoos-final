@@ -3,6 +3,7 @@
 import { useState, ReactNode, useEffect } from "react"
 import SplashScreen from "@/app/_ui/splashScreen"
 import InstallPopup from "@/app/_ui/InstallPopup"
+import { NotifProvider, NotificationContainer } from "@/app/_ui/notif"
 
 type RootLayoutProps = {
   children: ReactNode
@@ -63,13 +64,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return showSplash ? (
     <SplashScreen onFinish={() => setShowSplash(false)} />
   ) : (
-    <>
+    <NotifProvider>
+      <NotificationContainer />
       <InstallPopup
         visible={showInstall}
         onSkip={handleSkipInstall}
       />
 
       {children}
-    </>
+    </NotifProvider>
   )
 }

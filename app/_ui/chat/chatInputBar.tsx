@@ -21,6 +21,8 @@ import { useIsMobile } from "@/app/_lib/hooks/use-mobile";
 import { apiService } from "@/app/_lib/services/api";
 import { cn } from "@/app/_lib/utils";
 import Image from "next/image";
+import { toast } from "sonner";
+import { useNotifContext } from "../notif";
 
 export type UploadedFile = {
   id: string;
@@ -102,6 +104,7 @@ export default function ChatInput({
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const { showConfirm } = useNotifContext();
 
   const [isVoiceFullscreen, setIsVoiceFullscreen] = useState(false);
 
@@ -165,7 +168,12 @@ export default function ChatInput({
     const stream = await navigator.mediaDevices
       .getUserMedia({ audio: true })
       .catch(() => null);
-    if (!stream) return alert("برای ضبط صدا، دسترسی میکروفون لازم است.");
+    if (!stream) {
+      await showConfirm("برای ضبط صدا، دسترسی میکروفون لازم است.", [
+        { label: "تایید", value: true, variant: "primary" },
+      ]);
+      return;
+    }
 
     const mediaRecorder = new MediaRecorder(stream, {
       mimeType: "audio/webm;codecs=opus",
@@ -249,7 +257,10 @@ export default function ChatInput({
 
   const handleConvertAudio = async () => {
     if (!recordedBlob) {
-      alert("فایل صوتی موجود نیست.");
+      await showConfirm("فایل صوتی موجود نیست.", [
+        { label: "تایید", value: true, variant: "primary" },
+      ]);
+
       return;
     }
 
@@ -259,7 +270,9 @@ export default function ChatInput({
       const result = await apiService.speechToText(base64, "audio/webm");
       const finalText = result.text?.trim();
       if (!finalText) {
-        alert("متن معتبری شناسایی نشد.");
+        await showConfirm("متن معتبری شناسایی نشد.", [
+          { label: "تایید", value: true, variant: "primary" },
+        ]);
       } else if (voiceEnabled && autoSendVoice) {
         onSendMessage(finalText);
       } else {
@@ -268,6 +281,9 @@ export default function ChatInput({
     } catch (err) {
       console.error("Speech to Text Error:", err);
       alert("خطا در تبدیل گفتار به متن");
+      await showConfirm("خطا در تبدیل گفتار به متن", [
+        { label: "تایید", value: true, variant: "primary" },
+      ]);
     }
 
     setIsConverting(false);

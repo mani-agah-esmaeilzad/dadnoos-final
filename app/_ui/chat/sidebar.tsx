@@ -1,35 +1,36 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from "react";
 
-import { apiService, Conversation } from '@/app/_lib/services/api'
-import { LegalTemplate } from '@/app/_ui/chat/legalTemplateForm'
+import { apiService, Conversation } from "@/app/_lib/services/api";
+import { LegalTemplate } from "@/app/_ui/chat/legalTemplateForm";
 
-import { Button } from "@/app/_ui/components/button"
+import { Button } from "@/app/_ui/components/button";
 
-import SidebarBody from '@/app/_ui/sidebar/body'
-import { MessageCircleDashed } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import SidebarBody from "@/app/_ui/sidebar/body";
+import { MessageCircleDashed } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { cn } from '@/app/_lib/utils'
-import PricingButton from '@/app/_ui/pricing/pricing-button'
-import { useUserStore } from '@/app/_lib/hooks/store'
-import { useChat } from '@/app/_lib/hooks/useChat'
-import Image from 'next/image'
+import { cn } from "@/app/_lib/utils";
+import PricingButton from "@/app/_ui/pricing/pricing-button";
+import { useUserStore } from "@/app/_lib/hooks/store";
+import { useChat } from "@/app/_lib/hooks/useChat";
+import Image from "next/image";
 
-import * as texts from '@/app/_text/common.js'
+import * as texts from "@/app/_text/common.js";
+import { useNotifContext } from "../notif";
 
 interface SidebarProps {
-  collapsed: boolean
-  onToggle: () => void
-  onGoToMainPage?: () => void
-  useIsMobile: () => boolean
-  onLoadConversation: (conversationId: string) => void
-  onStartNewConversation: () => void
-  messages: any
-  setSidebarCollapsed: (collapsed: boolean) => void
-  onStartChatWithPrompt: any
-  onContractUpload: (file: File, type: 'contract' | 'document') => void
-  chatContainerRef: any
-  onOpenFileManager: () => void
+  collapsed: boolean;
+  onToggle: () => void;
+  onGoToMainPage?: () => void;
+  useIsMobile: () => boolean;
+  onLoadConversation: (conversationId: string) => void;
+  onStartNewConversation: () => void;
+  messages: any;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  onStartChatWithPrompt: any;
+  onContractUpload: (file: File, type: "contract" | "document") => void;
+  chatContainerRef: any;
+  onOpenFileManager: () => void;
 }
 
 export default function Sidebar({
@@ -43,158 +44,172 @@ export default function Sidebar({
   onStartChatWithPrompt,
   onContractUpload,
   chatContainerRef,
-  onOpenFileManager
+  onOpenFileManager,
 }: SidebarProps) {
+  const [expandedSections, setExpandedSections] = useState<string[]>([
+    "templates",
+    "legal-templates",
+  ]);
+  const [recentChats, setRecentChats] = useState<Conversation[]>([]);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<LegalTemplate | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
-  const [expandedSections, setExpandedSections] = useState<string[]>(['templates', 'legal-templates'])
-  const [recentChats, setRecentChats] = useState<Conversation[]>([])
-  const [editingChatId, setEditingChatId] = useState<string | null>(null)
-  const [editingTitle, setEditingTitle] = useState('')
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<LegalTemplate | null>(null)
-  const [hasScrolled, setHasScrolled] = useState(false)
-
-  const isMobile = useIsMobile()
-  const editInputRef = useRef<HTMLInputElement>(null)
-  const user = useUserStore((state) => state.user)
+  const isMobile = useIsMobile();
+  const editInputRef = useRef<HTMLInputElement>(null);
+  const user = useUserStore((state) => state.user);
   const { deleteConversation } = useChat();
+  const { showConfirm } = useNotifContext();
 
   const fetchConversations = useCallback(async () => {
     if (!user.id || !apiService.token) return;
     try {
-      const conversations = await apiService.getConversations(user.id)
-      setRecentChats(conversations)
+      const conversations = await apiService.getConversations(user.id);
+      setRecentChats(conversations);
     } catch (error) {
-      console.error("Failed to fetch conversations:", error)
+      console.error("Failed to fetch conversations:", error);
     }
-  }, [user.id])
+  }, [user.id]);
 
   const handleDeleteConversation = async (chatId: string) => {
-    if (window.confirm("آیا از حذف این گفتگو مطمئن هستید؟")) {
-      await deleteConversation(chatId)
-      fetchConversations()
+    const ok = await showConfirm("آیا از حذف این گفتگو مطمئن هستید؟");
+    if (ok) {
+      await deleteConversation(chatId);
+      fetchConversations();
     }
-  }
+  };
 
-  const handleContractUpload = async (file: File, type: 'contract' | 'document') => {
-    console.log('Uploading file for analysis:', file)
-    setIsUploadModalOpen(false)
+  const handleContractUpload = async (
+    file: File,
+    type: "contract" | "document",
+  ) => {
+    console.log("Uploading file for analysis:", file);
+    setIsUploadModalOpen(false);
 
     try {
-      await onContractUpload(file, type)
+      await onContractUpload(file, type);
     } catch (error) {
-      console.error("Failed to upload or analyze file:", error)
-      const errorMessage = error instanceof Error ? error.message : "یک خطای ناشناخته رخ داده است"
-      onStartChatWithPrompt(`متاسفانه در تحلیل ${type === 'contract' ? 'قرارداد' : 'سند'} "${file.name}" مشکلی پیش آمد. \n\n**خطا:** ${errorMessage}`)
+      console.error("Failed to upload or analyze file:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "یک خطای ناشناخته رخ داده است";
+      onStartChatWithPrompt(
+        `متاسفانه در تحلیل ${type === "contract" ? "قرارداد" : "سند"} "${file.name}" مشکلی پیش آمد. \n\n**خطا:** ${errorMessage}`,
+      );
     }
-  }
+  };
 
   useEffect(() => {
     if (user.id) {
-      fetchConversations()
+      fetchConversations();
     }
-  }, [user.id, fetchConversations])
-
+  }, [user.id, fetchConversations]);
 
   useEffect(() => {
     if (editingChatId && editInputRef.current) {
-      editInputRef.current.focus()
+      editInputRef.current.focus();
     }
-  }, [editingChatId])
+  }, [editingChatId]);
 
   useEffect(() => {
-    if (!isMobile || collapsed) return
+    if (!isMobile || collapsed) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      const sidebar = document.getElementById('sidebar-container')
+      const sidebar = document.getElementById("sidebar-container");
       if (sidebar && !sidebar.contains(event.target as Node)) {
-        onToggle()
+        onToggle();
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isMobile, collapsed, onToggle])
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMobile, collapsed, onToggle]);
 
   useEffect(() => {
     if (isMobile && !collapsed) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isMobile, collapsed])
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobile, collapsed]);
 
   const handleNewChatClick = () => {
-    onStartNewConversation()
+    onStartNewConversation();
     setTimeout(() => {
-      fetchConversations()
-    }, 500)
-  }
+      fetchConversations();
+    }, 500);
+  };
 
   const handleRename = async (chatId: string) => {
-    if (!user?.id) return
-    if (!editingTitle.trim()) return
+    if (!user?.id) return;
+    if (!editingTitle.trim()) return;
 
     try {
-      await apiService.updateChatTitle(user.id, chatId, editingTitle.trim())
+      await apiService.updateChatTitle(user.id, chatId, editingTitle.trim());
 
-      setRecentChats(prev =>
-        prev.map(chat =>
-          chat.chat_id === chatId ? { ...chat, title: editingTitle.trim() } : chat
-        )
-      )
+      setRecentChats((prev) =>
+        prev.map((chat) =>
+          chat.chat_id === chatId
+            ? { ...chat, title: editingTitle.trim() }
+            : chat,
+        ),
+      );
 
-      setEditingChatId(null)
+      setEditingChatId(null);
     } catch (err) {
-      alert("خطا در تغییر عنوان گفتگو")
+      await showConfirm("خطا در تغییر عنوان گفتگو", [
+        { label: "تایید", value: true, variant: "primary" },
+      ]);
     }
-  }
+  };
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev =>
+    setExpandedSections((prev) =>
       prev.includes(section)
-        ? prev.filter(s => s !== section)
-        : [...prev, section]
-    )
-  }
+        ? prev.filter((s) => s !== section)
+        : [...prev, section],
+    );
+  };
 
   const handleTemplateClick = (template: LegalTemplate) => {
-    setSelectedTemplate(template)
-    setIsFormModalOpen(true)
-  }
+    setSelectedTemplate(template);
+    setIsFormModalOpen(true);
+  };
 
   const handleFormSubmit = (data: Record<string, any>) => {
-    if (!selectedTemplate) return
+    if (!selectedTemplate) return;
 
-    let prompt = `با استفاده از اطلاعات زیر، یک پیش‌نویس کامل برای ${selectedTemplate.title.replace('فرم هوشمند ', '')} تهیه کن:\n\n`
+    let prompt = `با استفاده از اطلاعات زیر، یک پیش‌نویس کامل برای ${selectedTemplate.title.replace("فرم هوشمند ", "")} تهیه کن:\n\n`;
 
-    selectedTemplate.fields.forEach(field => {
-      prompt += `- ${field.label}: ${data[field.name]}\n`
-    })
+    selectedTemplate.fields.forEach((field) => {
+      prompt += `- ${field.label}: ${data[field.name]}\n`;
+    });
 
-    prompt += `\nلطفاً متنی حقوقی و جامع با تمام مواد و تبصره‌های لازم ایجاد کن.`
+    prompt += `\nلطفاً متنی حقوقی و جامع با تمام مواد و تبصره‌های لازم ایجاد کن.`;
 
-    onStartChatWithPrompt(prompt)
-    setIsFormModalOpen(false)
-    if (isMobile) onToggle()
-  }
+    onStartChatWithPrompt(prompt);
+    setIsFormModalOpen(false);
+    if (isMobile) onToggle();
+  };
 
   useEffect(() => {
-    const container = chatContainerRef.current
-    if (!container) return
+    const container = chatContainerRef.current;
+    if (!container) return;
 
     const handleScroll = () => {
-      setHasScrolled(container.scrollTop > 0)
-    }
+      setHasScrolled(container.scrollTop > 0);
+    };
 
-    container.addEventListener('scroll', handleScroll)
-    handleScroll()
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [chatContainerRef])
+    container.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [chatContainerRef]);
 
   return (
     <>
@@ -207,29 +222,27 @@ export default function Sidebar({
               !collapsed && "-translate-x-[85%]",
             )}
           >
-            <div className='size-12 flex items-center justify-start bg-white dark:bg-black'>
+            <div className="size-12 flex items-center justify-start bg-white dark:bg-black">
               <div
-                className='grid gap-1.5 p-4 py-3.5 rounded-lg cursor-pointer'
+                className="grid gap-1.5 p-4 py-3.5 rounded-lg cursor-pointer"
                 onClick={() => {
-                  onToggle()
+                  onToggle();
                 }}
               >
-                <div className='bg-black dark:bg-white rounded-full h-0.5 w-4' />
-                <div className='bg-black dark:bg-white rounded-full h-0.5 w-2' />
+                <div className="bg-black dark:bg-white rounded-full h-0.5 w-4" />
+                <div className="bg-black dark:bg-white rounded-full h-0.5 w-2" />
               </div>
             </div>
 
             {messages.length === 0 ? (
               <PricingButton />
             ) : (
-              <p className='font-semibold pt-0.5 -ms-0.5'>
-                دادنوس
-              </p>
+              <p className="font-semibold pt-0.5 -ms-0.5">دادنوس</p>
             )}
 
-            <div className='size-12 flex items-center justify-center'>
+            <div className="size-12 flex items-center justify-center">
               <AnimatePresence>
-                {(messages.length > 0 && collapsed) ? (
+                {messages.length > 0 && collapsed ? (
                   <motion.div
                     key="new-conversation"
                     initial={{ opacity: 0 }}
@@ -297,5 +310,5 @@ export default function Sidebar({
         onOpenFileManager={onOpenFileManager}
       />
     </>
-  )
+  );
 }

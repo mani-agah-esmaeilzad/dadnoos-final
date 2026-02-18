@@ -31,6 +31,7 @@ import {
 } from "docx";
 import { AnimatePresence, motion } from "framer-motion";
 import { useIsMobile } from "@/app/_lib/hooks/use-mobile";
+import { useNotifContext } from "@/app/_ui/notif";
 
 interface SavedMessagesManagerProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ export function SavedMessagesManager({
   const files = useSavedMessagesStore((state) => state.files);
   const cases = useSavedMessagesStore((state) => state.cases);
   const removeFile = useSavedMessagesStore((state) => state.removeFile);
+  const { showConfirm } = useNotifContext();
   const renameFile = useSavedMessagesStore((state) => state.renameFile);
   const updateCaseAssignment = useSavedMessagesStore(
     (state) => state.updateCaseAssignment,
@@ -277,7 +279,12 @@ export function SavedMessagesManager({
                                 variant="ghost"
                                 size="icon"
                                 className="text-neutral-500 hover:text-red-500"
-                                onClick={() => handleDeleteCase(caseItem.id)}
+                                onClick={async () => {
+                                  const ok = await showConfirm(
+                                    "آیا از حذف این پرونده اطمینان دارید؟",
+                                  );
+                                  if (ok) handleDeleteCase(caseItem.id);
+                                }}
                               >
                                 <MinusCircle className="size-4" />
                               </Button>
@@ -406,7 +413,12 @@ export function SavedMessagesManager({
                                   variant="ghost"
                                   size="icon"
                                   className="text-neutral-500 hover:text-red-500"
-                                  onClick={() => removeFile(file.id)}
+                                  onClick={async () => {
+                                    const ok = await showConfirm(
+                                      "آیا از حذف این فایل اطمینان دارید؟",
+                                    );
+                                    if (ok) removeFile(file.id);
+                                  }}
                                 >
                                   <Trash2 className="size-4" />
                                 </Button>
