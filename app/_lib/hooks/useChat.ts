@@ -150,7 +150,7 @@ export function useChat() {
 
   const startChatWithPrompt = (prompts: PromptInput[]) => {
     startNewConversation()
-
+    console.log(prompts)
     setSuggestions(prompts.map(p => p.prompt))
     setQueuedPrompts(prompts.map(p => ({
       id: generateUUID(),
