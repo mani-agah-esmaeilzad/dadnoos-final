@@ -1,11 +1,12 @@
-import { useState, useRef, ReactNode } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef, ReactNode } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PopupProps {
-  visible: boolean
-  onClose: () => void
-  children: ReactNode
-  disableDrag?: boolean
+  visible: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  disableDrag?: boolean;
+  width?: "fix" | "auto";
 }
 
 export default function Popup({
@@ -13,26 +14,29 @@ export default function Popup({
   onClose,
   children,
   disableDrag = false,
+  width = "fix",
 }: PopupProps) {
-  const [ripplePosition, setRipplePosition] =
-    useState<{ x: number; y: number } | null>(null)
-  const [shake, setShake] = useState(false)
-  const cardRef = useRef<HTMLDivElement>(null)
+  const [ripplePosition, setRipplePosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [shake, setShake] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    setRipplePosition({ x: e.clientX, y: e.clientY })
+    setRipplePosition({ x: e.clientX, y: e.clientY });
 
     if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
-      setShake(true)
-      setTimeout(() => setShake(false), 120)
+      setShake(true);
+      setTimeout(() => setShake(false), 120);
     }
-  }
+  };
 
   const handleDragEnd = (_: any, info: { offset: { y: number } }) => {
     if (info.offset.y > 200) {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   return (
     <AnimatePresence>
@@ -55,12 +59,12 @@ export default function Popup({
                 key={`${ripplePosition.x}-${ripplePosition.y}`}
                 initial={{ scale: 0, opacity: 0.4 }}
                 animate={{ scale: 10, opacity: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
                 className="absolute z-10 h-10 w-10 rounded-full bg-white/20 pointer-events-none"
                 style={{
                   left: ripplePosition.x,
                   top: ripplePosition.y,
-                  transform: 'translate(-50%, -50%)',
+                  transform: "translate(-50%, -50%)",
                 }}
                 onAnimationComplete={() => setRipplePosition(null)}
               />
@@ -69,7 +73,7 @@ export default function Popup({
 
           <motion.div
             ref={cardRef}
-            drag={disableDrag ? false : 'y'}
+            drag={disableDrag ? false : "y"}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.05}
             dragPropagation={false}
@@ -78,10 +82,10 @@ export default function Popup({
             animate={{ y: shake ? 25 : 0, opacity: 1 }}
             exit={{
               y: window.innerHeight,
-              transition: { duration: 0.35, ease: 'easeInOut' },
+              transition: { duration: 0.35, ease: "easeInOut" },
             }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="relative z-20 w-full max-h-5/6 max-w-xl bg-white dark:bg-neutral-800 rounded-t-4xl md:rounded-4xl shadow-xl pt-6 px-3 pb-20 md:pb-6"
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className={`flex flex-col relative z-20 w-full max-h-5/6 bg-white dark:bg-neutral-800 rounded-t-4xl md:rounded-4xl shadow-xl pt-6 px-3 pb-20 md:pb-6 overflow-hidden ${width == "fix" ? "max-w-xl" : "w-max"}`}
           >
             <div className="absolute top-1.5 right-1/2 translate-x-1/2 h-1.5 w-[10%] rounded-full bg-neutral-400/25 md:hidden" />
             {children}
@@ -89,5 +93,5 @@ export default function Popup({
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
