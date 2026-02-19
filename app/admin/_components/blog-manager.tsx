@@ -8,6 +8,7 @@ import { Button } from '@/app/_ui/components/button'
 import { Input } from '@/app/_ui/components/input'
 import { Textarea } from '@/app/_ui/components/textarea'
 import { toPersianNumber } from '@/app/_lib/utils'
+import { useNotifContext } from '@/app/_ui/notif'
 
 type BlogPostRow = {
   id: string
@@ -87,6 +88,7 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
   const [actionMessage, setActionMessage] = useState<{ text: string; tone: 'success' | 'error' } | null>(null)
   const [deletePending, setDeletePending] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const {showConfirm} = useNotifContext()
 
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
 
@@ -182,8 +184,11 @@ export default function BlogManager({ posts, pagination, query, status }: BlogMa
     })
   }
 
-  const handleDelete = (post: BlogPostRow) => {
-    if (!confirm(`آیا از حذف مقاله «${post.title}» مطمئن هستید؟`)) return
+  const handleDelete = async (post: BlogPostRow) => {
+    const ok = await showConfirm(
+      `آیا از حذف مقاله «${post.title}» مطمئن هستید؟`
+    );
+    if (!ok) return
     setDeletePending(post.id)
     fetch(`/api/admin/blogs/${post.id}`, { method: 'DELETE' })
       .then(async (response) => {

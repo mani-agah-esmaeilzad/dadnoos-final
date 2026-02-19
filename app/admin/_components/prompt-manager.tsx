@@ -7,6 +7,7 @@ import { Button } from '@/app/_ui/components/button'
 import { Textarea } from '@/app/_ui/components/textarea'
 import { Input } from '@/app/_ui/components/input'
 import { cn } from '@/app/_lib/utils'
+import { useNotifContext } from '@/app/_ui/notif'
 
 export interface PromptViewModel {
   slug: string
@@ -54,6 +55,7 @@ export default function PromptManager({ initialPrompts }: { initialPrompts: Prom
   const [modelValue, setModelValue] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const {showConfirm} = useNotifContext()
 
   const sortedPrompts = useMemo(() => {
     return [...prompts].sort((a, b) => {
@@ -119,7 +121,8 @@ export default function PromptManager({ initialPrompts }: { initialPrompts: Prom
 
   const handleReset = async () => {
     if (!activePrompt) return
-    if (!window.confirm('آیا از بازنشانی این پرامپت به نسخه پیش‌فرض مطمئن هستید؟')) return
+    const ok = await showConfirm('آیا از بازنشانی این پرامپت به نسخه پیش‌فرض مطمئن هستید؟');
+    if (!ok) return
     setIsSaving(true)
     setStatusMessage(null)
     try {
