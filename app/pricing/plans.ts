@@ -19,7 +19,6 @@ export const PLANS: Record<string, Plan[]> = {
       name: "یک ماهه",
       price: 385000,
       buttonText: "خرید",
-      code: "PLAN_MONTHLY",
       features: [
         "دسترسی به تمامی امکانات پایه",
         "پشتیبانی ایمیلی",
@@ -34,7 +33,6 @@ export const PLANS: Record<string, Plan[]> = {
       price: 1850000,
       discount: 20,
       buttonText: "خرید",
-      code: "PLAN_SEMI_ANNUAL",
       features: [
         "دسترسی به تمامی امکانات پیشرفته",
         "پشتیبانی اولویت‌دار",
@@ -49,7 +47,6 @@ export const PLANS: Record<string, Plan[]> = {
       price: 2750000,
       discount: 40,
       buttonText: "خرید",
-      code: "PLAN_YEARLY",
       features: [
         "دسترسی به تمامی امکانات ویژه",
         "پشتیبانی VIP",
@@ -77,7 +74,6 @@ export const PLANS: Record<string, Plan[]> = {
       name: "یک ماهه",
       price: 495000,
       buttonText: "خرید",
-      code: "PLAN_MONTHLY",
       features: [
         "تمام امکانات پایه + ابزار تحلیلی پیشرفته",
         "پشتیبانی چت آنلاین",
@@ -92,7 +88,6 @@ export const PLANS: Record<string, Plan[]> = {
       price: 2400000,
       discount: 15,
       buttonText: "خرید",
-      code: "PLAN_SEMI_ANNUAL",
       features: [
         "دسترسی به تمامی امکانات plus",
         "پشتیبانی اولویت‌دار",
@@ -107,7 +102,6 @@ export const PLANS: Record<string, Plan[]> = {
       price: 3950000,
       discount: 25,
       buttonText: "خرید",
-      code: "PLAN_YEARLY",
       features: [
         "تمام امکانات plus + داشبورد مدیریتی",
         "پشتیبانی VIP 24/7",
@@ -135,7 +129,6 @@ export const PLANS: Record<string, Plan[]> = {
       name: "یک ماهه",
       price: 695000,
       buttonText: "خرید",
-      code: "PLAN_MONTHLY",
       features: [
         "تمام امکانات plus + امکانات حرفه‌ای",
         "پشتیبانی ویژه اولویت بالا",
@@ -150,7 +143,6 @@ export const PLANS: Record<string, Plan[]> = {
       price: 3950000,
       discount: 20,
       buttonText: "خرید",
-      code: "PLAN_SEMI_ANNUAL",
       features: [
         "دسترسی کامل به امکانات pro",
         "پشتیبانی VIP اختصاصی",
@@ -165,7 +157,6 @@ export const PLANS: Record<string, Plan[]> = {
       price: 6950000,
       discount: 30,
       buttonText: "خرید",
-      code: "PLAN_YEARLY",
       features: [
         "تمام امکانات pro + داشبورد پیشرفته تحلیلی",
         "پشتیبانی اختصاصی 24/7 VIP",
