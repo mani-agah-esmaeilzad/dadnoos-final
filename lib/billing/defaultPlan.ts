@@ -52,7 +52,13 @@ export async function ensurePlanCatalog() {
   for (const plan of BUILT_IN_PLANS) {
     await prisma.subscriptionPlan.upsert({
       where: { code: plan.code },
-      update: {},
+      update: {
+        title: plan.title,
+        durationDays: plan.durationDays,
+        tokenQuota: plan.tokenQuota,
+        priceCents: plan.priceCents,
+        isOrganizational: plan.isOrganizational ?? false,
+      },
       create: {
         code: plan.code,
         title: plan.title,

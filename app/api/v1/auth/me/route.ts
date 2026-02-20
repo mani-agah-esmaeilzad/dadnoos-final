@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const token = requireAuth(req)
     const user = await prisma.user.findUnique({ where: { id: token.sub } })
     if (!user) {
-      return NextResponse.json({ detail: 'کاربر یافت نشد.' }, { status: 404 })
+      return NextResponse.json({ detail: 'کاربر یافت نشد.' }, { status: 401 })
     }
 
     return NextResponse.json({ id: user.id, username: user.username })

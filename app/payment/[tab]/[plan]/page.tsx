@@ -115,10 +115,13 @@ export default function PaymentPage({ params }: { params: Promise<{ tab: TabKey;
   const fallbackMessageCredit =
     messageQuota > 0 ? Math.round(currentPlanPrice * (remainingMessages / messageQuota)) : currentPlanPrice
   const upgradeCredit = billing?.subscription?.upgrade_credit_cents ?? fallbackMessageCredit ?? 0
-  const isDowngrade = Boolean(billing?.subscription && planPrice <= currentPlanPrice)
-  const amountDue = Math.max(planPrice - upgradeCredit, 0)
   const activePlanName = billing?.subscription?.plan_title ?? billing?.subscription?.plan_code ?? (billing?.has_subscription ? 'پلن فعلی' : null)
-  const checkoutDisabled = loading || processing || !planRecord || isDowngrade
+  const activePlanCode = billing?.subscription?.plan_code ?? billing?.subscription?.plan_id ?? null
+  const selectedPlanCode = planRecord?.code ?? planRecord?.id ?? null
+  const isSamePlan = Boolean(activePlanCode && selectedPlanCode && activePlanCode === selectedPlanCode)
+  const effectiveUpgradeCredit = planPrice > currentPlanPrice ? upgradeCredit : 0
+  const amountDue = Math.max(planPrice - effectiveUpgradeCredit, 0)
+  const checkoutDisabled = loading || processing || !planRecord || isSamePlan
 
   const handlePurchase = async () => {
     if (!planRecord) return
@@ -144,10 +147,10 @@ export default function PaymentPage({ params }: { params: Promise<{ tab: TabKey;
   const nextStepLabel = amountDue === 0 ? 'تأیید و فعال‌سازی' : `پرداخت ${formatCurrency(amountDue)}`
 
   const helperMessage = useMemo(() => {
-    if (isDowngrade && activePlanName) return `شما هم‌اکنون در ${activePlanName} با قیمتی بالاتر یا برابر هستید. فقط ارتقا به پلن گران‌تر مجاز است.`
-    if (billing?.subscription && !isDowngrade) return `اعتبار ارتقا بر اساس پیام‌های مصرف‌شده محاسبه شده و مبلغ ${formatCurrency(upgradeCredit)} از قیمت کسر می‌شود.`
+    if (isSamePlan && activePlanName) return `شما هم‌اکنون در همین پلن (${activePlanName}) هستید.`
+    if (billing?.subscription && planPrice > currentPlanPrice) return `اعتبار ارتقا بر اساس پیام‌های مصرف‌شده محاسبه شده و مبلغ ${formatCurrency(upgradeCredit)} از قیمت کسر می‌شود.`
     return null
-  }, [isDowngrade, billing?.subscription, activePlanName, upgradeCredit])
+  }, [isSamePlan, billing?.subscription, activePlanName, upgradeCredit, planPrice, currentPlanPrice])
 
   return (
     <div className="flex flex-col items-center justify-start mt-safe px-4 pb-10">
@@ -177,7 +180,7 @@ export default function PaymentPage({ params }: { params: Promise<{ tab: TabKey;
             </div>
             <div className="rounded-3xl border border-neutral-200/70 dark:border-neutral-800/60 p-4 bg-neutral-50/70 dark:bg-neutral-900/40 space-y-3 text-xs text-neutral-600 dark:text-neutral-300">
               {loading ? <><Skeleton className="h-3 w-1/2" /><Skeleton className="h-3 w-1/2" /><Skeleton className="h-3 w-1/2" /></> : <>
-                <div className="flex items-center justify-between"><span>اعتبار ارتقا (بر اساس پیام)</span><strong>{formatCurrency(upgradeCredit)}</strong></div>
+                <div className="flex items-center justify-between"><span>اعتبار ارتقا (بر اساس پیام)</span><strong>{formatCurrency(effectiveUpgradeCredit)}</strong></div>
                 <div className="flex items-center justify-between"><span>مبلغ قابل پرداخت</span><strong>{formatCurrency(amountDue)}</strong></div>
                 {billing?.subscription?.expires_at && <div className="flex items-center justify-between"><span>انقضای پلن فعلی</span><strong>{formatDate(billing.subscription.expires_at)}</strong></div>}
               </>}

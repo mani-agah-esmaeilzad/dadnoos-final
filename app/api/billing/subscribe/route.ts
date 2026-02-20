@@ -68,26 +68,25 @@ export async function POST(req: NextRequest) {
     let upgradeFromId: string | undefined
     if (activeSubscription) {
       const previousPrice = activeSubscription.plan?.priceCents ?? 0
-      if (plan.priceCents <= previousPrice) {
-        return NextResponse.json({ detail: 'فقط امکان ارتقا به پلن بالاتر وجود دارد.' }, { status: 400 })
-      }
-      const messageQuota = getPlanMessageLimit(activeSubscription.plan?.code)
-      const messagesUsed = await prisma.trackingEvent.count({
-        where: {
-          userId: auth.sub,
-          eventType: 'chat_request',
-          source: 'api/v1/chat',
-          createdAt: {
-            gte: activeSubscription.startedAt,
-            lte: new Date(),
+      if (plan.priceCents > previousPrice) {
+        const messageQuota = getPlanMessageLimit(activeSubscription.plan?.code)
+        const messagesUsed = await prisma.trackingEvent.count({
+          where: {
+            userId: auth.sub,
+            eventType: 'chat_request',
+            source: 'api/v1/chat',
+            createdAt: {
+              gte: activeSubscription.startedAt,
+              lte: new Date(),
+            },
           },
-        },
-      })
-      upgradeCredit = calculateMessageBasedCredit({
-        planPriceCents: previousPrice,
-        messageQuota,
-        messagesUsed,
-      })
+        })
+        upgradeCredit = calculateMessageBasedCredit({
+          planPriceCents: previousPrice,
+          messageQuota,
+          messagesUsed,
+        })
+      }
       upgradeFromId = activeSubscription.id
     }
 

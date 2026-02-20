@@ -6,7 +6,7 @@ import { ChevronLeft, LogOut, Settings, X } from "lucide-react"
 import { Button } from "@/app/_ui/components/button"
 import { useRouter } from "next/navigation"
 import Popup from "@/app/_ui/components/popup"
-import { cn, toPersianNumber } from "@/app/_lib/utils"
+import { cn, toEnglishNumber, toPersianNumber } from "@/app/_lib/utils"
 import PricingButton from "../pricing/pricing-button"
 import Image from "next/image"
 
@@ -29,6 +29,29 @@ export default function Setting({
 }: SettingProps) {
   const router = useRouter()
   const [isSettingPanelOpen, setIsSettingPanelOpen] = useState(false)
+
+  const normalizeDigits = (value: string | number | undefined | null) =>
+    toEnglishNumber(String(value ?? '')).replace(/\D/g, '')
+
+  const isLikelyPhone = (value: string | number | undefined | null) => {
+    const digits = normalizeDigits(value)
+    return digits.length >= 10 && digits.length <= 13
+  }
+
+  const maskMobile = (value: string | number | undefined | null) => {
+    const digits = normalizeDigits(value)
+    if (!digits) return 'حساب کاربری'
+    const start = digits.slice(0, 3)
+    const end = digits.slice(-4)
+    return `${toPersianNumber(start)}****${toPersianNumber(end)}`
+  }
+
+  const displayName =
+    user?.name && !isLikelyPhone(user.name)
+      ? user.name
+      : user?.mobile
+        ? maskMobile(user.mobile)
+        : 'حساب کاربری'
 
   const closePopup = () => setIsSettingPanelOpen(false)
 
@@ -91,7 +114,7 @@ export default function Setting({
             className="size-8 object-cover object-center rounded-full overflow-hidden dark:opacity-65"
           />
           <span className="text-sm font-medium">
-            {user?.mobile ? toPersianNumber(user?.mobile) : "حساب کاربری"}
+            {displayName}
           </span>
         </div>
 
