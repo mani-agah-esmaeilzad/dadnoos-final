@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
   try {
     requireAuth(req)
     enforceBodySizeLimit(req, env.MAX_UPLOAD_BYTES * 2)
-    if (env.AUDIO_STUB_MODE) {
+    const stubFlag = process.env.AUDIO_STUB_MODE?.trim().toLowerCase()
+    const isExplicitStub = stubFlag === 'true' || stubFlag === '1' || stubFlag === 'yes'
+    if (isExplicitStub) {
       return NextResponse.json({ text: 'متن نمونه (حالت شبیه‌ساز).' })
     }
     const body = sttSchema.parse(await req.json())

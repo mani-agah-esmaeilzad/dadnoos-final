@@ -77,6 +77,75 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
+const writeString = (view: DataView, offset: number, value: string) => {
+  for (let i = 0; i < value.length; i += 1) {
+    view.setUint8(offset + i, value.charCodeAt(i));
+  }
+};
+
+const encodeWav = (audioBuffer: AudioBuffer) => {
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const numFrames = audioBuffer.length;
+  const bytesPerSample = 2;
+  const blockAlign = numChannels * bytesPerSample;
+  const buffer = new ArrayBuffer(44 + numFrames * blockAlign);
+  const view = new DataView(buffer);
+
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, 36 + numFrames * blockAlign, true);
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bytesPerSample * 8, true);
+  writeString(view, 36, "data");
+  view.setUint32(40, numFrames * blockAlign, true);
+
+  let offset = 44;
+  for (let i = 0; i < numFrames; i += 1) {
+    for (let channel = 0; channel < numChannels; channel += 1) {
+      const sample = audioBuffer.getChannelData(channel)[i] ?? 0;
+      const clamped = Math.max(-1, Math.min(1, sample));
+      view.setInt16(
+        offset,
+        clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff,
+        true
+      );
+      offset += bytesPerSample;
+    }
+  }
+
+  return buffer;
+};
+
+const blobToWavBase64 = async (blob: Blob): Promise<string> => {
+  const arrayBuffer = await blob.arrayBuffer();
+  const AudioContextRef =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioContextRef) {
+    throw new Error("AudioContext not supported");
+  }
+  const audioContext = new AudioContextRef();
+  try {
+    if (audioContext.state === "suspended") {
+      await audioContext.resume().catch(() => undefined);
+    }
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+    const wavBuffer = encodeWav(audioBuffer);
+    const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
+    return await blobToBase64(wavBlob);
+  } finally {
+    await audioContext.close().catch(() => undefined);
+  }
+};
+
 export default function ChatInput({
   inputValue,
   isTyping,
@@ -266,8 +335,20 @@ export default function ChatInput({
 
     try {
       setIsConverting(true);
-      const base64 = await blobToBase64(recordedBlob);
-      const result = await apiService.speechToText(base64, "audio/webm");
+      let mimeType = recordedBlob.type || "audio/webm";
+      let base64 = await blobToBase64(recordedBlob);
+      if (mimeType.includes("webm") || mimeType.includes("ogg")) {
+        try {
+          base64 = await blobToWavBase64(recordedBlob);
+          mimeType = "audio/wav";
+        } catch (conversionError) {
+          console.warn(
+            "Voice message WAV conversion failed, falling back to raw blob.",
+            conversionError
+          );
+        }
+      }
+      const result = await apiService.speechToText(base64, mimeType);
       const finalText = result.text?.trim();
       if (!finalText) {
         await showConfirm("متن معتبری شناسایی نشد.", [
