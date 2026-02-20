@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MODULE_IDS } from '@/lib/chat/modules'
 
 export const imageSchema = z.object({
   base64: z.string().optional(),
@@ -20,6 +21,7 @@ export const chatRequestSchema = z.object({
   user_id: z.string().optional(),
   images: z.array(imageSchema).optional(),
   attachments: z.array(attachmentSchema).optional(),
+  module: z.enum(MODULE_IDS).optional(),
 })
 
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>

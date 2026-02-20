@@ -112,7 +112,19 @@ export async function listPromptConfigs(): Promise<PromptConfigDTO[]> {
 export async function upsertPromptConfig(slug: string, data: { content: string; model?: string | null }) {
   const fallback = getDefaultPromptBySlug(slug)
   if (!fallback) {
-    throw new Error(`Prompt definition for slug "${slug}" not found.`)
+    const existing = await prisma.promptConfig.findUnique({ where: { slug } })
+    if (!existing) {
+      throw new Error(`Prompt definition for slug "${slug}" not found.`)
+    }
+    const modelValue = normalizeModelInput(data.model)
+    const record = await prisma.promptConfig.update({
+      where: { slug },
+      data: {
+        content: data.content,
+        model: modelValue,
+      },
+    })
+    return mapDb(record)
   }
 
   const modelValue = normalizeModelInput(data.model)

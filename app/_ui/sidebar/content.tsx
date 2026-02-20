@@ -69,6 +69,7 @@ import Link from "next/link";
 import { useSavedMessagesStore } from "@/app/_lib/hooks/useSavedMessages";
 import Setting from "./setting";
 import { useNotifContext } from "../notif";
+import type { ModuleId } from "@/lib/chat/modules";
 
 interface SidebarProps {
   isMobile: boolean;
@@ -84,7 +85,7 @@ interface SidebarProps {
   handleDeleteConversation: (id: string) => void;
   setEditingChatId: (id: string | null) => void;
   editingChatId: string | null;
-  onTemplateClick: (template: LegalTemplate) => void;
+  onTemplateClick: (template: LegalTemplate, module?: ModuleId) => void;
   editInputRef: RefObject<HTMLInputElement | null>;
   editingTitle: string;
   selectedTemplate: LegalTemplate | null;
@@ -460,88 +461,105 @@ export default function SidebarContent({
                                       if (item === "مطالبه وجه")
                                         onTemplateClick(
                                           debtDeclarationTemplate,
+                                          "declaration",
                                         );
                                       else if (item === "تخلیه ملک")
                                         onTemplateClick(
                                           evictionDeclarationTemplate,
+                                          "declaration",
                                         );
                                       else if (item === "فسخ قرارداد")
                                         onTemplateClick(
                                           contractCancellationDeclarationTemplate,
+                                          "declaration",
                                         );
                                       else if (item === "سایر")
                                         onTemplateClick(
                                           generalDeclarationTemplate,
+                                          "declaration",
                                         );
                                     } else if (section.title === "دادخواست") {
                                       if (item === "مطالبه وجه")
-                                        onTemplateClick(claimPaymentTemplate);
+                                        onTemplateClick(claimPaymentTemplate, "petition");
                                       else if (item === "الزام به ایفای تعهد")
                                         onTemplateClick(
                                           obligationFulfillmentTemplate,
+                                          "petition",
                                         );
                                       else if (item === "خلع ید و استرداد ملک")
                                         onTemplateClick(
                                           propertyRestitutionTemplate,
+                                          "petition",
                                         );
                                       else if (item === "فسخ قرارداد و خسارت")
                                         onTemplateClick(
                                           contractTerminationTemplate,
+                                          "petition",
                                         );
                                       else if (item === "سایر")
-                                        onTemplateClick(generalLawsuitTemplate);
+                                        onTemplateClick(generalLawsuitTemplate, "petition");
                                     } else if (section.title === "شکواییه") {
                                       if (item === "کلاهبرداری")
-                                        onTemplateClick(fraudComplaintTemplate);
+                                        onTemplateClick(fraudComplaintTemplate, "complaint");
                                       else if (item === "سرقت و خیانت در امانت")
-                                        onTemplateClick(theftComplaintTemplate);
+                                        onTemplateClick(theftComplaintTemplate, "complaint");
                                       else if (item === "توهین و افترا")
                                         onTemplateClick(
                                           defamationComplaintTemplate,
+                                          "complaint",
                                         );
                                       else if (item === "جرایم اینترنتی")
                                         onTemplateClick(
                                           cyberCrimeComplaintTemplate,
+                                          "complaint",
                                         );
                                       else if (item === "سایر")
                                         onTemplateClick(
                                           generalComplaintTemplate,
+                                          "complaint",
                                         );
                                     } else if (section.title === "قرارداد") {
                                       if (item === "کار")
                                         onTemplateClick(
                                           employmentContractTemplate,
+                                          "contract_drafting",
                                         );
                                       else if (item === "اجاره")
                                         onTemplateClick(
                                           rentalAgreementTemplate,
+                                          "contract_drafting",
                                         );
                                       else if (item === "مشارکت")
                                         onTemplateClick(
                                           partnershipAgreementTemplate,
+                                          "contract_drafting",
                                         );
                                       else if (item === "خرید و فروش")
-                                        onTemplateClick(salesAgreementTemplate);
+                                        onTemplateClick(salesAgreementTemplate, "contract_drafting");
                                       else if (item === "سایر")
                                         onTemplateClick(
                                           generalContractTemplate,
+                                          "contract_drafting",
                                         );
                                     } else if (section.title === "لایحه") {
                                       if (item === "دفاعیه کیفری")
                                         onTemplateClick(
                                           criminalDefenseTemplate,
+                                          "brief",
                                         );
                                       else if (item === "اعتراضی به رأی")
-                                        onTemplateClick(appealPetitionTemplate);
+                                        onTemplateClick(appealPetitionTemplate, "brief");
                                       else if (item === "دفاعیه حقوقی")
-                                        onTemplateClick(civilDefenseTemplate);
+                                        onTemplateClick(civilDefenseTemplate, "brief");
                                       else if (item === "تخفیف مجازات")
                                         onTemplateClick(
                                           sentenceReductionTemplate,
+                                          "brief",
                                         );
                                       else if (item === "سایر")
                                         onTemplateClick(
                                           generalPetitionTemplate,
+                                          "brief",
                                         );
                                     }
                                   }}
@@ -571,6 +589,7 @@ export default function SidebarContent({
                       prompt: p,
                       title: "پیش بینی رای",
                     })),
+                    "verdict_prediction",
                   );
                 }}
               >

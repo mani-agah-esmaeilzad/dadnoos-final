@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 
 import { useUserStore } from '@/app/_lib/hooks/store'
 import { apiService, Message as ApiMessage, ChatRequest } from '@/app/_lib/services/api'
+import type { ModuleId } from '@/lib/chat/modules'
 
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -84,6 +85,7 @@ export function useChat() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [queuedPrompts, setQueuedPrompts] = useState<QueuedPrompt[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<QueuedPrompt[]>([])
+  const [nextModuleOverride, setNextModuleOverride] = useState<ModuleId | null>(null)
 
   const addMessage = useCallback((
     content: string,
@@ -108,6 +110,7 @@ export function useChat() {
     setError(null)
     setQueuedPrompts([])
     setUploadedFiles([])
+    setNextModuleOverride(null)
     setShouldResetAudio(true)
   }
 
@@ -147,8 +150,20 @@ export function useChat() {
   }
 
   type PromptInput = { prompt: string, title: string }
+  type StartPromptInput = PromptInput[] | string | string[]
 
-  const startChatWithPrompt = (prompts: PromptInput[]) => {
+  const normalizePrompts = (input: StartPromptInput): PromptInput[] => {
+    if (typeof input === 'string') {
+      return [{ prompt: input, title: 'پیام' }]
+    }
+    if (Array.isArray(input) && input.length && typeof input[0] === 'string') {
+      return (input as string[]).map((prompt) => ({ prompt, title: 'پیام' }))
+    }
+    return input as PromptInput[]
+  }
+
+  const startChatWithPrompt = (input: StartPromptInput, moduleOverride?: ModuleId) => {
+    const prompts = normalizePrompts(input)
     startNewConversation()
     console.log(prompts)
     setSuggestions(prompts.map(p => p.prompt))
@@ -159,6 +174,7 @@ export function useChat() {
       description: undefined,
       prompt: p.prompt,
     })))
+    setNextModuleOverride(moduleOverride ?? null)
   }
 
   const removeQueuedPrompt = (promptId: string) => {
@@ -184,6 +200,7 @@ export function useChat() {
     }
 
     setUploadedFiles(prev => [...prev, newFilePrompt])
+    setNextModuleOverride(category === 'contract' ? 'analysis_contract' : 'analysis_document')
   }
 
   const handleSendMessage = async (overrideMessage?: string) => {
@@ -202,6 +219,8 @@ export function useChat() {
 
     const queuedSnapshot = [...queuedPrompts]
     const uploadedSnapshot = [...uploadedFiles]
+    const moduleOverrideSnapshot = nextModuleOverride
+    setNextModuleOverride(null)
 
     setQueuedPrompts([])
     setUploadedFiles([])
@@ -255,7 +274,8 @@ export function useChat() {
         message: finalMessage,
         images,
         attachments,
-        prompt: ''
+        prompt: '',
+        module: moduleOverrideSnapshot ?? undefined,
       } as any
 
       const response = await apiService.sendMessage(requestBody)
@@ -280,6 +300,7 @@ export function useChat() {
 
       setQueuedPrompts(queuedSnapshot)
       setUploadedFiles(uploadedSnapshot)
+      setNextModuleOverride(moduleOverrideSnapshot)
     } finally {
       setIsThinking(false)
     }

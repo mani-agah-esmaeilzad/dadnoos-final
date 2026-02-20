@@ -1,4 +1,4 @@
-import { ModuleId } from '@/lib/chat/modules'
+import { ModuleId, MODULE_IDS } from '@/lib/chat/modules'
 
 export interface RouterDecision {
   module: ModuleId
@@ -20,15 +20,29 @@ export interface ConversationMetadata {
   moduleContext?: Partial<Record<ModuleId, ModuleContextEntry>>
 }
 
+function isModuleId(value: unknown): value is ModuleId {
+  return typeof value === 'string' && (MODULE_IDS as readonly string[]).includes(value)
+}
+
 export function parseConversationMetadata(value: unknown): ConversationMetadata {
   if (!value || typeof value !== 'object') return {}
   try {
     const parsed = JSON.parse(JSON.stringify(value)) as ConversationMetadata
+    const activeModule = isModuleId(parsed.activeModule) ? parsed.activeModule : undefined
+    const lastRouterDecision =
+      parsed.lastRouterDecision && isModuleId(parsed.lastRouterDecision.module)
+        ? parsed.lastRouterDecision
+        : undefined
+    const moduleContext = parsed.moduleContext
+      ? Object.fromEntries(
+          Object.entries(parsed.moduleContext).filter(([key]) => isModuleId(key))
+        )
+      : undefined
     return {
-      activeModule: parsed.activeModule,
+      activeModule,
       activeModuleSince: parsed.activeModuleSince,
-      lastRouterDecision: parsed.lastRouterDecision,
-      moduleContext: parsed.moduleContext,
+      lastRouterDecision,
+      moduleContext,
     }
   } catch {
     return {}

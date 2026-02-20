@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { ModuleId } from "@/lib/chat/modules";
 
 import { apiService, Conversation } from "@/app/_lib/services/api";
 import { LegalTemplate } from "@/app/_ui/chat/legalTemplateForm";
@@ -57,6 +58,7 @@ export default function Sidebar({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] =
     useState<LegalTemplate | null>(null);
+  const [selectedTemplateModule, setSelectedTemplateModule] = useState<ModuleId | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const isMobile = useIsMobile();
@@ -177,8 +179,9 @@ export default function Sidebar({
     );
   };
 
-  const handleTemplateClick = (template: LegalTemplate) => {
+  const handleTemplateClick = (template: LegalTemplate, module?: ModuleId) => {
     setSelectedTemplate(template);
+    setSelectedTemplateModule(module ?? null);
     setIsFormModalOpen(true);
   };
 
@@ -193,8 +196,9 @@ export default function Sidebar({
 
     prompt += `\nلطفاً متنی حقوقی و جامع با تمام مواد و تبصره‌های لازم ایجاد کن.`;
 
-    onStartChatWithPrompt(prompt);
+    onStartChatWithPrompt(prompt, selectedTemplateModule ?? undefined);
     setIsFormModalOpen(false);
+    setSelectedTemplateModule(null);
     if (isMobile) onToggle();
   };
 

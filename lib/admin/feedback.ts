@@ -23,6 +23,16 @@ export async function listFeedback({
   from,
   to,
 }: FeedbackListParams) {
+  const feedbackDelegate = (prisma as typeof prisma & { feedback?: typeof prisma.feedback }).feedback
+  if (!feedbackDelegate) {
+    console.warn('[admin-feedback] Prisma client is missing Feedback model. Run "npx prisma generate".')
+    return {
+      total: 0,
+      page,
+      pageSize,
+      items: [],
+    }
+  }
   const where: Prisma.FeedbackWhereInput = {}
 
   if (userId) {
@@ -53,8 +63,8 @@ export async function listFeedback({
   }
 
   const [total, feedbacks] = await Promise.all([
-    prisma.feedback.count({ where }),
-    prisma.feedback.findMany({
+    feedbackDelegate.count({ where }),
+    feedbackDelegate.findMany({
       where,
       include: { user: { select: { username: true } } },
       orderBy: { createdAt: 'desc' },

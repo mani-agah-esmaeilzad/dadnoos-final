@@ -92,7 +92,7 @@ export default function PromptManager({ initialPrompts }: { initialPrompts: Prom
     setIsSaving(true)
     setStatusMessage(null)
     try {
-      const response = await fetch(`/api/admin/prompts/${activePrompt.slug}`, {
+      const response = await fetch(`/api/admin/prompts/${encodeURIComponent(activePrompt.slug)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,7 +126,7 @@ export default function PromptManager({ initialPrompts }: { initialPrompts: Prom
     setIsSaving(true)
     setStatusMessage(null)
     try {
-      const response = await fetch(`/api/admin/prompts/${activePrompt.slug}`, { method: 'DELETE' })
+      const response = await fetch(`/api/admin/prompts/${encodeURIComponent(activePrompt.slug)}`, { method: 'DELETE' })
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}))
         throw new Error(payload.detail || 'بازنشانی با خطا مواجه شد.')

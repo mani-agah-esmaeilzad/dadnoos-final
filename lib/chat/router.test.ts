@@ -36,7 +36,7 @@ describe('router helpers', () => {
 
   it('recognizes explicit module keywords', () => {
     expect(detectExplicitModuleIntent('لطفاً قرارداد جدید بنویس')).toBe('contract_drafting')
-    expect(detectExplicitModuleIntent('یک دادخواست تنظیم کن')).toBe('petitions_complaints')
+    expect(detectExplicitModuleIntent('یک دادخواست تنظیم کن')).toBe('petition')
     expect(detectExplicitModuleIntent('سوال عمومی دارم')).toBeNull()
   })
 
@@ -45,7 +45,7 @@ describe('router helpers', () => {
       activeModule: 'contract_drafting',
       followUp: true,
       explicitIntent: null,
-      routerDecision: decision('contract_review', 0.4, 'maybe switch'),
+      routerDecision: decision('analysis_contract', 0.4, 'maybe switch'),
     })
     expect(result).toBe('contract_drafting')
   })
@@ -55,9 +55,9 @@ describe('router helpers', () => {
       activeModule: 'generic_chat',
       followUp: true,
       explicitIntent: null,
-      routerDecision: decision('contract_review', 0.9, 'کاربر درباره تحلیل قرارداد پرسید'),
+      routerDecision: decision('analysis_contract', 0.9, 'کاربر درباره تحلیل قرارداد پرسید'),
     })
-    expect(result).toBe('contract_review')
+    expect(result).toBe('analysis_contract')
   })
 
   it('falls back to generic_chat when router output is invalid', async () => {

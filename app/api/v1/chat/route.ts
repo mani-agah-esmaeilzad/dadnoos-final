@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       summaryJson: prepared.summaryJson,
       history: prepared.history,
       sessionMetadata: prepared.sessionMetadata,
+      moduleOverride: body.module ?? null,
     })
 
     if (plan.mode === 'intake' && plan.intakeResponse) {

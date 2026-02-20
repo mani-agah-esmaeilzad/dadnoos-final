@@ -1,9 +1,16 @@
-export type ModuleId =
-  | 'contract_review'
-  | 'document_brief_analysis'
-  | 'petitions_complaints'
-  | 'contract_drafting'
-  | 'generic_chat'
+export const MODULE_IDS = [
+  'analysis_contract',
+  'analysis_document',
+  'declaration',
+  'petition',
+  'complaint',
+  'brief',
+  'contract_drafting',
+  'verdict_prediction',
+  'generic_chat',
+] as const
+
+export type ModuleId = (typeof MODULE_IDS)[number]
 
 export interface ModuleFieldDefinition {
   key: string
@@ -28,8 +35,8 @@ const FIELD = (key: string, label: string, description?: string, required = true
 })
 
 export const MODULE_CONFIGS: Record<ModuleId, ModuleConfig> = {
-  contract_review: {
-    id: 'contract_review',
+  analysis_contract: {
+    id: 'analysis_contract',
     name: 'تحلیل قرارداد',
     intakeRequired: false,
     domain: 'contracts',
@@ -39,36 +46,81 @@ export const MODULE_CONFIGS: Record<ModuleId, ModuleConfig> = {
       FIELD('objectives', 'اهداف اصلی و نگرانی‌های ریسک', undefined, false),
     ],
   },
-  document_brief_analysis: {
-    id: 'document_brief_analysis',
-    name: 'تحلیل لوایح و آراء',
+  analysis_document: {
+    id: 'analysis_document',
+    name: 'تحلیل سند',
     intakeRequired: false,
     domain: 'procedure',
     fields: [
-      FIELD('document_text', 'متن لایحه/رأی/دادخواست', 'خلاصه متن، نقل‌قول یا فایل استخراج شده.'),
-      FIELD('procedural_stage', 'مرحله رسیدگی', 'بدوی، تجدیدنظر، فرجام، شورای حل اختلاف و ...'),
-      FIELD('user_goal', 'هدف کاربر از تحلیل', 'دفاع، اصلاح، آماده‌سازی جلسه و ...'),
+      FIELD('document_text', 'متن سند یا مدرک', 'خلاصه متن، نقل‌قول یا فایل استخراج شده.'),
+      FIELD('document_type', 'نوع سند', 'اظهارنامه، دادخواست، رأی، مکاتبه و ...', false),
+      FIELD('procedural_stage', 'مرحله رسیدگی', 'بدوی، تجدیدنظر، فرجام، شورا و ...', false),
+      FIELD('user_goal', 'هدف کاربر از تحلیل', 'دفاع، اصلاح، آماده‌سازی جلسه و ...', false),
     ],
   },
-  petitions_complaints: {
-    id: 'petitions_complaints',
-    name: 'تنظیم دادخواست/شکواییه',
+  declaration: {
+    id: 'declaration',
+    name: 'اظهارنامه',
     intakeRequired: true,
     domain: 'procedure',
     fields: [
-      FIELD('case_type', 'نوع پرونده', 'حقوقی، کیفری، خانواده، کار و ...'),
-      FIELD('authority', 'مرجع و صلاحیت', 'دادگاه، دادسرا، شورا، دیوان و ...'),
-      FIELD('branch', 'شعبه یا شهر', undefined, false),
-      FIELD('parties', 'مشخصات طرفین', 'خواهان/خوانده یا شاکی/مشتکی‌عنه'),
+      FIELD('parties', 'مشخصات طرفین', 'اظهارکننده و مخاطب'),
+      FIELD('subject', 'موضوع اظهارنامه', 'مثلا مطالبه وجه، تخلیه، فسخ'),
       FIELD('claim', 'خواسته یا درخواست اصلی'),
+      FIELD('facts_timeline', 'شرح ماوقع و تاریخچه'),
+      FIELD('evidence_list', 'دلایل و مستندات', undefined, false),
+      FIELD('deadlines', 'مهلت یا اقدام فوری', undefined, false),
+    ],
+  },
+  petition: {
+    id: 'petition',
+    name: 'دادخواست',
+    intakeRequired: true,
+    domain: 'procedure',
+    fields: [
+      FIELD('case_type', 'نوع دعوا', 'حقوقی، خانواده، کار و ...'),
+      FIELD('authority', 'مرجع صالح', 'دادگاه، شورا، دیوان و ...'),
+      FIELD('branch', 'شعبه یا شهر', undefined, false),
+      FIELD('parties', 'مشخصات طرفین', 'خواهان/خوانده'),
+      FIELD('claim', 'خواسته یا درخواست اصلی'),
+      FIELD('claim_value', 'بهای خواسته', undefined, false),
       FIELD('facts_timeline', 'شرح ماوقع و تاریخچه'),
       FIELD('evidence_list', 'دلایل و مستندات'),
       FIELD('deadlines', 'ابلاغ یا مهلت مهم', undefined, false),
     ],
   },
+  complaint: {
+    id: 'complaint',
+    name: 'شکواییه',
+    intakeRequired: true,
+    domain: 'procedure',
+    fields: [
+      FIELD('crime_title', 'عنوان اتهام', 'کلاهبرداری، سرقت، توهین و ...'),
+      FIELD('authority', 'مرجع صالح', 'دادسرا یا دادگاه کیفری'),
+      FIELD('parties', 'مشخصات طرفین', 'شاکی/مشتکی‌عنه'),
+      FIELD('facts_timeline', 'شرح ماوقع و تاریخچه'),
+      FIELD('evidence_list', 'دلایل و مستندات'),
+      FIELD('damages', 'خسارت یا ضرر و زیان', undefined, false),
+    ],
+  },
+  brief: {
+    id: 'brief',
+    name: 'لایحه',
+    intakeRequired: true,
+    domain: 'procedure',
+    fields: [
+      FIELD('case_summary', 'خلاصه پرونده و موضوع دعوا'),
+      FIELD('procedural_stage', 'مرحله رسیدگی', 'بدوی، تجدیدنظر و ...'),
+      FIELD('parties', 'مشخصات طرفین'),
+      FIELD('position', 'موضع شما', 'خواهان/خوانده/شاکی/مشتکی‌عنه'),
+      FIELD('arguments', 'دفاعیات یا استدلال‌های اصلی'),
+      FIELD('evidence_list', 'دلایل و مستندات'),
+      FIELD('requests', 'خواسته یا نتیجه مورد نظر', undefined, false),
+    ],
+  },
   contract_drafting: {
     id: 'contract_drafting',
-    name: 'تنظیم قرارداد جدید',
+    name: 'قرارداد',
     intakeRequired: true,
     domain: 'contracts',
     fields: [
@@ -80,6 +132,18 @@ export const MODULE_CONFIGS: Record<ModuleId, ModuleConfig> = {
       FIELD('deliverables', 'تحویل و معیار پذیرش'),
       FIELD('ip_confidentiality', 'مالکیت فکری/محرمانگی', undefined, false),
       FIELD('dispute_resolution', 'حل اختلاف و مرجع صالح', 'پیش‌فرض ایران', false),
+    ],
+  },
+  verdict_prediction: {
+    id: 'verdict_prediction',
+    name: 'پیش بینی رای',
+    intakeRequired: false,
+    domain: 'procedure',
+    fields: [
+      FIELD('case_summary', 'خلاصه پرونده', undefined, false),
+      FIELD('forum', 'مرجع رسیدگی', 'دادگاه، شورا، داوری و ...', false),
+      FIELD('procedural_stage', 'مرحله رسیدگی', 'بدوی، تجدیدنظر و ...', false),
+      FIELD('evidence_strength', 'وضعیت ادله و مستندات', undefined, false),
     ],
   },
   generic_chat: {

@@ -11,6 +11,7 @@ import { websiteName } from "@/app/_text/common"
 import { Button } from "@/app/_ui/components/button"
 import SidebarContent from "@/app/_ui/sidebar/content"
 import { LegalTemplate } from "@/app/_ui/chat/legalTemplateForm"
+import type { ModuleId } from "@/lib/chat/modules"
 
 import { Conversation } from "@/app/_lib/services/api"
 import { cn } from "@/app/_lib/utils"
@@ -29,7 +30,7 @@ interface SidebarProps {
   handleDeleteConversation: (id: string) => void;
   setEditingChatId: (id: string | null) => void
   editingChatId: string | null
-  onTemplateClick: (template: LegalTemplate) => void
+  onTemplateClick: (template: LegalTemplate, module?: ModuleId) => void
   editInputRef: RefObject<HTMLInputElement | null>
   editingTitle: string
   selectedTemplate: LegalTemplate | null

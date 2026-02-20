@@ -1,11 +1,9 @@
 import { z } from 'zod'
 
 import { getRouterPromptEntry } from '@/lib/agent/registry'
-import { ModuleId, MODULE_CONFIGS } from '@/lib/chat/modules'
+import { ModuleId, MODULE_IDS } from '@/lib/chat/modules'
 import type { ConversationMetadata, RouterDecision } from '@/lib/chat/sessionMetadata'
 import { createChatCompletion } from '@/lib/llm/client'
-
-const MODULE_IDS = Object.keys(MODULE_CONFIGS) as ModuleId[]
 
 const ROUTER_OUTPUT_SCHEMA = z.object({
   module: z.enum(MODULE_IDS),
@@ -34,28 +32,14 @@ export function detectFollowUp(text: string) {
 }
 
 const MODULE_KEYWORDS: Record<ModuleId, RegExp[]> = {
-  contract_review: [
-    /تحلیل قرارداد/i,
-    /خلاصه قرارداد/i,
-    /بررسی بند/i,
-    /ریسک قرارداد/i,
-  ],
-  document_brief_analysis: [
-    /تحلیل (لایحه|رای|حکم|دادخواست)/i,
-    /این رأی را بررسی/i,
-    /نقد لایحه/i,
-  ],
-  petitions_complaints: [
-    /دادخواست (بنویس|تنظیم کن?)/i,
-    /شکواییه/i,
-    /لایحه تهیه کن/i,
-    /اظهارنامه/i,
-  ],
-  contract_drafting: [
-    /قرارداد (جدید|بنویس)/i,
-    /نمونه قرارداد/i,
-    /پیش نویس قرارداد/i,
-  ],
+  analysis_contract: [/تحلیل قرارداد/i, /خلاصه قرارداد/i, /بررسی بند/i, /ریسک قرارداد/i],
+  analysis_document: [/تحلیل سند/i, /تحلیل (لایحه|رای|حکم|دادخواست)/i, /این رأی را بررسی/i, /نقد لایحه/i],
+  declaration: [/اظهارنامه/i],
+  petition: [/دادخواست (بنویس|تنظیم کن?)/i, /تنظیم دادخواست/i],
+  complaint: [/شکواییه/i],
+  brief: [/لایحه/i, /لایحه تهیه کن/i],
+  contract_drafting: [/قرارداد (جدید|بنویس|تنظیم کن?)/i, /نمونه قرارداد/i, /پیش نویس قرارداد/i],
+  verdict_prediction: [/پیش\s*بینی\s*رای/i, /پیش\s*بینی رأی/i],
   generic_chat: [],
 }
 

@@ -19,6 +19,7 @@ export interface ChatRequest {
   images?: any
   attachments?: any
   prompt?: string
+  module?: string
 }
 
 export interface ChatResponse {

@@ -26,6 +26,7 @@ export interface ConversationPlanInput {
   summaryJson?: string | null
   history: { role: 'user' | 'assistant'; content: string }[]
   sessionMetadata?: ConversationMetadata | null
+  moduleOverride?: ModuleId | null
 }
 
 type ModuleSelection = Awaited<ReturnType<typeof selectModule>>
@@ -66,11 +67,27 @@ export async function planConversation({
   sessionMetadata,
 }: ConversationPlanInput): Promise<ConversationPlanResult> {
   const metadata = normalizeMetadata(sessionMetadata)
-  const routing = await selectModule({ message, summaryJson, history, metadata })
+  let routing: ModuleSelection
+  if (moduleOverride) {
+    routing = {
+      module: moduleOverride,
+      routerDecision: {
+        module: moduleOverride,
+        confidence: 1,
+        required_metadata: [],
+        notes: 'manual_override',
+        decidedAt: new Date().toISOString(),
+      },
+      followUp: false,
+      explicitIntent: moduleOverride,
+    }
+  } else {
+    routing = await selectModule({ message, summaryJson, history, metadata })
+  }
   await recordTrackingEvent({
     userId,
     eventType: 'router_decision',
-    source: 'chat_router',
+    source: moduleOverride ? 'chat_router_override' : 'chat_router',
     payload: {
       module: routing.routerDecision.module,
       confidence: routing.routerDecision.confidence,
