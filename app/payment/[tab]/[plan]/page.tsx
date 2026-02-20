@@ -72,8 +72,23 @@ export default function PaymentPage({ params }: { params: Promise<{ tab: TabKey;
           plansResp.plans.find((p) => p.id === plan)
 
         if (!resolvedPlan) {
-          setPlanRecord(null)
-          setError('پلن درخواستی یافت نشد. دوباره از صفحه قیمت‌گذاری تلاش کنید.')
+          if (planMeta?.code) {
+            const fallbackDuration =
+              plan === 'semiannual' ? 180 : plan === 'yearly' ? 365 : 30
+            setPlanRecord({
+              id: planMeta.code,
+              code: planMeta.code,
+              title: planMeta.name,
+              duration_days: fallbackDuration,
+              token_quota: 0,
+              message_quota: 0,
+              is_organizational: false,
+              price_cents: planMeta.price ?? 0,
+            })
+          } else {
+            setPlanRecord(null)
+            setError('پلن درخواستی یافت نشد. دوباره از صفحه قیمت‌گذاری تلاش کنید.')
+          }
         } else {
           setPlanRecord(resolvedPlan)
         }

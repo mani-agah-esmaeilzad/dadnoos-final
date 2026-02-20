@@ -44,7 +44,13 @@ export async function POST(req: NextRequest) {
     await ensurePlanCatalog()
     const body = bodySchema.parse(await req.json())
 
-    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: body.plan_id } })
+    const normalizedPlanCode = body.plan_id.startsWith('fallback-')
+      ? body.plan_id.replace('fallback-', '')
+      : body.plan_id
+    let plan = await prisma.subscriptionPlan.findUnique({ where: { id: body.plan_id } })
+    if (!plan) {
+      plan = await prisma.subscriptionPlan.findUnique({ where: { code: normalizedPlanCode } })
+    }
     if (!plan) {
       return NextResponse.json({ detail: 'Plan not found.' }, { status: 404 })
     }

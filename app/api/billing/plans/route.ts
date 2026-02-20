@@ -37,6 +37,9 @@ export async function GET(req: NextRequest) {
       where: includeOrg ? {} : { isOrganizational: false },
       orderBy: { createdAt: 'asc' },
     })
+    if (!plans.length) {
+      return NextResponse.json({ plans: buildFallbackPlans(includeOrg), detail: 'billing_plans_empty_fallback' })
+    }
 
     const payload = plans.map((plan) => ({
       id: plan.id,
