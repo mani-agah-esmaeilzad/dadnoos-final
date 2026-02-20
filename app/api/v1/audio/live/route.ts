@@ -16,6 +16,7 @@ import {
   appendAssistantMessage,
 } from '@/lib/audio/liveSessionStore'
 import { liveChatCompletion, synthesizeSpeech, transcribeAudio } from '@/lib/audio/client'
+import { HttpError } from '@/lib/http/errors'
 
 const liveSchema = z.object({
   action: z.enum(['start', 'chunk', 'stop']),
@@ -132,6 +133,9 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ detail: 'ورودی نامعتبر است.', issues: error.flatten() }, { status: 400 })
+    }
+    if (error instanceof HttpError) {
+      return NextResponse.json({ detail: error.message, issues: error.details }, { status: error.status })
     }
     const message = error instanceof Error ? error.message : 'Internal server error'
     return NextResponse.json({ detail: message }, { status: 500 })

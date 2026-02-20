@@ -408,13 +408,23 @@ export default function ChatInput({
                 !isThinking &&
                 !audioURL &&
                 !isTyping && (
-                  <button
-                    onClick={() => setIsVoiceFullscreen(true)}
-                    className="aspect-square m-0.5 mr-0 h-8 flex items-center justify-center p-0.5 rounded-full cursor-pointer dark:bg-white bg-black dark:text-black text-white"
-                    title="گفتگوی زنده"
-                  >
-                    <AudioLines className="size-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsVoiceFullscreen(true)}
+                      className="aspect-square m-0.5 mr-0 h-8 flex items-center justify-center p-0.5 rounded-full cursor-pointer dark:bg-white bg-black dark:text-black text-white"
+                      title="گفتگوی زنده"
+                    >
+                      <AudioLines className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onOpenVoiceSettings ?? (() => {})}
+                      className="aspect-square m-0.5 h-8 flex items-center justify-center p-0.5 rounded-full cursor-pointer bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200"
+                      title="تنظیمات صوتی"
+                    >
+                      <Settings2 className="size-4" />
+                    </button>
+                  </div>
                 )}
 
               <button

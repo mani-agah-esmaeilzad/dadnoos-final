@@ -65,6 +65,7 @@ export async function planConversation({
   summaryJson,
   history,
   sessionMetadata,
+  moduleOverride,
 }: ConversationPlanInput): Promise<ConversationPlanResult> {
   const metadata = normalizeMetadata(sessionMetadata)
   let routing: ModuleSelection

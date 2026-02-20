@@ -26,11 +26,19 @@ export const useVoiceSettings = create<VoiceSettingsState>()(
       setVoiceEnabled: (value) => set({ voiceEnabled: value }),
       setAutoSendVoice: (value) => set({ autoSendVoice: value }),
       setAutoPlayResponses: (value) => set({ autoPlayResponses: value }),
-      setVoiceLiveEnabled: (value) => set({ voiceLiveEnabled: value }),
+      setVoiceLiveEnabled: (value) =>
+        set({
+          voiceLiveEnabled: value,
+          ...(value ? { voiceEnabled: true } : {}),
+        }),
       toggleVoiceEnabled: () => set({ voiceEnabled: !get().voiceEnabled }),
       toggleAutoSendVoice: () => set({ autoSendVoice: !get().autoSendVoice }),
       toggleAutoPlayResponses: () => set({ autoPlayResponses: !get().autoPlayResponses }),
-      toggleVoiceLiveEnabled: () => set({ voiceLiveEnabled: !get().voiceLiveEnabled }),
+      toggleVoiceLiveEnabled: () =>
+        set((state) => ({
+          voiceLiveEnabled: !state.voiceLiveEnabled,
+          ...(!state.voiceLiveEnabled ? { voiceEnabled: true } : {}),
+        })),
     }),
     {
       name: 'voice-settings',
